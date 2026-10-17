@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HealthSync AI — Privacy-Preserving Federated Healthcare</title>
+    <meta name="description" content="Decentralized, Differential-Privacy-empowered Federated Learning platform for Google Fit telemetry and disease risk prediction.">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <!-- Top Header -->
+    <header class="app-header">
+        <div class="header-container">
+            <div class="brand">
+                <div class="brand-logo">
+                    <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+                    </svg>
+                </div>
+                <div class="brand-text">
+                    <h1>HealthSync <span>AI</span></h1>
+                    <p class="subtitle">Decentralized Federated Health Intelligence</p>
+                </div>
+            </div>
+
+            <div class="header-badges">
+                <div class="badge-card badge-privacy">
+                    <span class="pulse-dot"></span>
+                    <span>Zero Data Leakage (DP Active)</span>
+                </div>
+                <div class="badge-card badge-server" id="server-status-badge">
+                    <span class="status-indicator online"></span>
+                    <span id="header-client-count">Connecting...</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Navigation Tabs -->
+        <nav class="nav-tabs">
+            <button class="nav-tab active" data-tab="patient-tab" id="tab-patient-btn">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="5" y="2" width="14" height="20" rx="2" ry="2"/>
+                    <line x1="12" y1="18" x2="12.01" y2="18"/>
+                </svg>
+                <span>Patient Portal (My Device)</span>
+            </button>
+            <button class="nav-tab" data-tab="server-tab" id="tab-server-btn">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"/>
+                    <line x1="2" y1="12" x2="22" y2="12"/>
+                    <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+                </svg>
+                <span>Central Federated Server</span>
+            </button>
+            <button class="nav-tab" data-tab="simulator-tab" id="tab-simulator-btn">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/>
+                </svg>
+                <span>Clinical Risk Simulator</span>
+            </button>
+        </nav>
+    </header>
+
+    <main class="main-content">
+        <!-- ================= PATIENT PORTAL TAB ================= -->
+        <section class="tab-pane active" id="patient-tab">
+            <!-- Patient Top Bar -->
+            <div class="user-select-bar glass-panel">
+                <div class="user-picker">
+                    <label for="user-select">Active Patient Profile:</label>
+                    <select id="user-select" class="custom-select">
+                        <option value="user1">User 1 (Anurag - Connected)</option>
+                        <option value="user2">User 2 (Connected)</option>
+                    </select>
+                </div>
+
+                <div class="user-actions">
+                    <button class="btn btn-secondary" id="refresh-fit-btn">
+                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
+                        </svg>
+                        <span>Sync Google Fit Data</span>
+                    </button>
+                    <button class="btn btn-primary" id="train-ondevice-btn">
+                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+                        </svg>
+                        <span>Train & Push DP Weights</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Health Risk Banner -->
+            <div class="condition-banner glass-panel" id="condition-banner">
+                <div class="condition-status-left">
+                    <span class="badge-condition" id="condition-badge">ANALYZING...</span>
+                    <h2 id="condition-title">Health Risk Assessment</h2>
+                    <p id="condition-subtitle">Continuous background telemetry evaluated with privacy-preserving AI.</p>
+                </div>
+                <div class="vital-index-metric">
+                    <span class="metric-num" id="vital-risk-num">5.49</span>
+                    <span class="metric-label">Vital Risk Index</span>
+                </div>
+            </div>
+
+            <!-- Clinical Alerts Box (If any) -->
+            <div class="alerts-container" id="alerts-container" style="display: none;">
+                <!-- Injected via JS -->
+            </div>
+
+            <!-- Vitals Grid -->
+            <h3 class="section-title">Today's Wearable Biometrics</h3>
+            <div class="vitals-grid">
+                <!-- Heart Rate -->
+                <div class="vital-card glass-panel" id="card-hr">
+                    <div class="vital-header">
+                        <div class="vital-icon icon-red">
+                            <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+                                <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                            </svg>
+                        </div>
+                        <span class="vital-name">Heart Rate</span>
+                    </div>
+                    <div class="vital-value-wrap">
+                        <span class="vital-val" id="vital-hr">--</span>
+                        <span class="vital-unit">BPM</span>
+                    </div>
+                    <div class="vital-footer">
+                        <span class="pulse-indicator"></span> Resting Cardio Active
+                    </div>
+                </div>
+
+                <!-- Blood Pressure -->
+                <div class="vital-card glass-panel" id="card-bp">
+                    <div class="vital-header">
+                        <div class="vital-icon icon-orange">
+                            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"/>
+                                <path d="M12 6v6l4 2"/>
+                            </svg>
+                        </div>
+                        <span class="vital-name">Blood Pressure</span>
+                    </div>
+                    <div class="vital-value-wrap">
+                        <span class="vital-val" id="vital-bp">--/--</span>
+                        <span class="vital-unit">mmHg</span>
+                    </div>
+                    <div class="vital-footer" id="vital-bp-status">Systolic / Diastolic</div>
+                </div>
+
+                <!-- SpO2 -->
+                <div class="vital-card glass-panel" id="card-spo2">
+                    <div class="vital-header">
+                        <div class="vital-icon icon-cyan">
+                            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/>
+                            </svg>
+                        </div>
+                        <span class="vital-name">Oxygen Saturation</span>
+                    </div>
+                    <div class="vital-value-wrap">
+                        <span class="vital-val" id="vital-spo2">--</span>
+                        <span class="vital-unit">% SpO2</span>
+                    </div>
+                    <div class="vital-footer">Safe Peripheral Oxygenation</div>
+                </div>
+
+                <!-- Steps -->
+                <div class="vital-card glass-panel" id="card-steps">
+                    <div class="vital-header">
+                        <div class="vital-icon icon-emerald">
+                            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M13 4v16M17 8v8M9 8v8M5 11v2M21 11v2"/>
+                            </svg>
+                        </div>
+                        <span class="vital-name">Daily Steps</span>
+                    </div>
+                    <div class="vital-value-wrap">
+                        <span class="vital-val" id="vital-steps">--</span>
+                        <span class="vital-unit">steps</span>
+                    </div>
+                    <div class="progress-bar-wrap">
+                        <div class="progress-bar-fill" id="steps-bar" style="width: 70%;"></div>
+                    </div>
+                </div>
+
+                <!-- Sleep -->
+                <div class="vital-card glass-panel" id="card-sleep">
+                    <div class="vital-header">
+                        <div class="vital-icon icon-purple">
+                            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+                            </svg>
+                        </div>
+                        <span class="vital-name">Sleep Duration</span>
+                    </div>
+                    <div class="vital-value-wrap">
+                        <span class="vital-val" id="vital-sleep">--</span>
+                        <span class="vital-unit">hrs</span>
+                    </div>
+                    <div class="vital-footer">Rest & Circadian Quality</div>
+                </div>
+
+                <!-- Calories -->
+                <div class="vital-card glass-panel" id="card-calories">
+                    <div class="vital-header">
+                        <div class="vital-icon icon-amber">
+                            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/>
+                            </svg>
+                        </div>
+                        <span class="vital-name">Calories Expended</span>
+                    </div>
+                    <div class="vital-value-wrap">
+                        <span class="vital-val" id="vital-calories">--</span>
+                        <span class="vital-unit">kcal</span>
+                    </div>
+                    <div class="vital-footer">Metabolic Energy Burn</div>
+                </div>
+            </div>
+
+            <!-- Charts Section -->
+            <div class="charts-row">
+                <div class="chart-panel glass-panel">
+                    <div class="chart-header">
+                        <h4>Biometric Telemetry Trend (Past 14 Days)</h4>
+                        <span class="chart-tag">Google Fit Aggregated</span>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="timelineChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="chart-panel glass-panel">
+                    <div class="chart-header">
+                        <h4>Disease Risk Probability Breakdown</h4>
+                        <span class="chart-tag">Federated AI Inference</span>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="riskProbChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Edge Differential Privacy Console Log Modal -->
+            <div class="terminal-panel glass-panel" id="ondevice-terminal">
+                <div class="terminal-header">
+                    <div class="terminal-dots">
+                        <span></span><span></span><span></span>
+                    </div>
+                    <span class="terminal-title">On-Device Training & Differential Privacy Shield</span>
+                    <span class="terminal-badge">HIPAA / GDPR Zero Data Leakage</span>
+                </div>
+                <div class="terminal-body" id="client-terminal-logs">
+                    <p class="term-line info">[EDGE NODE] Ready for decentralized local training.</p>
+                    <p class="term-line info">[PRIVACY] Raw health telemetry is locked inside client device sandbox.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= CENTRAL SERVER TAB ================= -->
+        <section class="tab-pane" id="server-tab">
+            <div class="server-control-panel glass-panel">
+                <div class="server-info">
+                    <h2>Central Federated Aggregator</h2>
+                    <p>Coordinates multi-party FedAvg updates without seeing or storing raw patient biometrics.</p>
+                </div>
+                <div class="server-cta">
+                    <button class="btn btn-primary btn-large" id="trigger-fedavg-btn">
+                        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
+                        </svg>
+                        <span>Trigger Federated Round (FedAvg)</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Network Topology & Stats Grid -->
+            <div class="server-stats-grid">
+                <div class="stat-box glass-panel">
+                    <span class="stat-label">Active Client Nodes</span>
+                    <span class="stat-value text-cyan" id="stat-active-nodes">2</span>
+                    <span class="stat-sub">user1, user2</span>
+                </div>
+                <div class="stat-box glass-panel">
+                    <span class="stat-label">Global Model Accuracy</span>
+                    <span class="stat-value text-emerald" id="stat-global-acc">58.70%</span>
+                    <span class="stat-sub">Personalized: 70.0% (user1)</span>
+                </div>
+                <div class="stat-box glass-panel">
+                    <span class="stat-label">Differential Privacy (&epsilon;)</span>
+                    <span class="stat-value text-purple" id="stat-epsilon">1.0</span>
+                    <span class="stat-sub">Single-Release Output DP</span>
+                </div>
+                <div class="stat-box glass-panel">
+                    <span class="stat-label">Total Telemetry Records</span>
+                    <span class="stat-value text-amber" id="stat-records">105</span>
+                    <span class="stat-sub">Standardized (Zero Leakage)</span>
+                </div>
+            </div>
+
+            <!-- Network Topology Visualization -->
+            <div class="topology-panel glass-panel">
+                <h3 class="section-title">Federated Network Topology</h3>
+                <div class="topology-diagram">
+                    <div class="topology-node server-node">
+                        <div class="node-icon">
+                            <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="2" y="2" width="20" height="8" rx="2" ry="2"/>
+                                <rect x="2" y="14" width="20" height="8" rx="2" ry="2"/>
+                                <line x1="6" y1="6" x2="6.01" y2="6"/>
+                                <line x1="6" y1="18" x2="6.01" y2="18"/>
+                            </svg>
+                        </div>
+                        <div class="node-title">Central FedAvg Server</div>
+                        <div class="node-sub">Aggregator & Evaluator</div>
+                    </div>
+
+                    <div class="topology-lines">
+                        <div class="top-line"></div>
+                        <div class="top-line"></div>
+                    </div>
+
+                    <div class="client-nodes-row">
+                        <div class="topology-node client-node">
+                            <div class="node-icon">📱</div>
+                            <div class="node-title">Client 1 (user1)</div>
+                            <div class="node-sub">Google Fit • DP Active</div>
+                        </div>
+                        <div class="topology-node client-node">
+                            <div class="node-icon">📱</div>
+                            <div class="node-title">Client 2 (user2)</div>
+                            <div class="node-sub">Google Fit • DP Active</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Server Aggregation Log Terminal -->
+            <div class="terminal-panel glass-panel">
+                <div class="terminal-header">
+                    <div class="terminal-dots">
+                        <span></span><span></span><span></span>
+                    </div>
+                    <span class="terminal-title">Central Coordinator Live Logs</span>
+                    <span class="terminal-badge">FedAvg Engine</span>
+                </div>
+                <div class="terminal-body" id="server-terminal-logs">
+                    <p class="term-line info">[SERVER] Federated Learning coordinator initialized.</p>
+                    <p class="term-line success">[VERIFIED] Zero-leakage feature statistics aggregation active.</p>
+                    <p class="term-line info">[READY] Awaiting client round triggers.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= CLINICAL RISK SIMULATOR TAB ================= -->
+        <section class="tab-pane" id="simulator-tab">
+            <div class="simulator-layout">
+                <div class="sim-controls glass-panel">
+                    <h3>Interactive Clinical Vitals Simulator</h3>
+                    <p class="subtitle">Simulate arbitrary patient telemetry to test the Federated AI diagnosis model.</p>
+
+                    <!-- Heart Rate Slider -->
+                    <div class="sim-slider-group">
+                        <div class="slider-label-row">
+                            <span>Resting Heart Rate (BPM)</span>
+                            <span class="slider-val" id="sim-hr-val">74 BPM</span>
+                        </div>
+                        <input type="range" id="sim-hr" min="45" max="150" value="74" class="custom-slider">
+                    </div>
+
+                    <!-- Systolic BP Slider -->
+                    <div class="sim-slider-group">
+                        <div class="slider-label-row">
+                            <span>Systolic Blood Pressure (mmHg)</span>
+                            <span class="slider-val" id="sim-bp-sys-val">120 mmHg</span>
+                        </div>
+                        <input type="range" id="sim-bp-sys" min="90" max="190" value="120" class="custom-slider">
+                    </div>
+
+                    <!-- Diastolic BP Slider -->
+                    <div class="sim-slider-group">
+                        <div class="slider-label-row">
+                            <span>Diastolic Blood Pressure (mmHg)</span>
+                            <span class="slider-val" id="sim-bp-dia-val">80 mmHg</span>
+                        </div>
+                        <input type="range" id="sim-bp-dia" min="60" max="120" value="80" class="custom-slider">
+                    </div>
+
+                    <!-- SpO2 Slider -->
+                    <div class="sim-slider-group">
+                        <div class="slider-label-row">
+                            <span>Blood Oxygen Saturation (SpO2 %)</span>
+                            <span class="slider-val" id="sim-spo2-val">98 %</span>
+                        </div>
+                        <input type="range" id="sim-spo2" min="80" max="100" value="98" class="custom-slider">
+                    </div>
+
+                    <!-- Sleep Slider -->
+                    <div class="sim-slider-group">
+                        <div class="slider-label-row">
+                            <span>Sleep Duration (Hours)</span>
+                            <span class="slider-val" id="sim-sleep-val">7.5 hrs</span>
+                        </div>
+                        <input type="range" id="sim-sleep" min="2" max="12" step="0.5" value="7.5" class="custom-slider">
+                    </div>
+
+                    <button class="btn btn-primary btn-block" id="sim-predict-btn">Evaluate Health Condition</button>
+                </div>
+
+                <!-- Simulation Result Card -->
+                <div class="sim-result glass-panel">
+                    <h3>Federated AI Clinical Diagnosis</h3>
+                    <div class="sim-badge" id="sim-result-badge">NORMAL (LOW RISK)</div>
+                    
+                    <div class="sim-metric-row">
+                        <div class="sim-m-box">
+                            <span class="m-val" id="sim-vri">5.07</span>
+                            <span class="m-lbl">Vital Risk Index</span>
+                        </div>
+                        <div class="sim-m-box">
+                            <span class="m-val" id="sim-conf">89.4%</span>
+                            <span class="m-lbl">Confidence</span>
+                        </div>
+                    </div>
+
+                    <div class="sim-alerts-box" id="sim-alerts-box">
+                        <p class="sim-safe-note">✓ All vitals within safe physiological thresholds.</p>
+                    </div>
+
+                    <div class="sim-probs-bars" id="sim-probs-container">
+                        <!-- Injected via JS -->
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="app-footer">
+        <p>HealthSync AI • Zero Data Leakage Federated Learning with Single-Release Output Differential Privacy (&epsilon;=1.0)</p>
+    </footer>
+
+    <script src="/static/js/app.js"></script>
+</body>
+</html>
