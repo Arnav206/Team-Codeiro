@@ -25,7 +25,18 @@ from federated_fit_server import run_federated_fit_training, MODEL_SAVE_PATH
 from predict_fit_user import predict_health_risk, load_global_model
 
 app = Flask(__name__)
+app.config['TEMPLATES_AUTO_RELOAD'] = True
+app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
+
+@app.after_request
+def add_header(response):
+    response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
+    response.headers['Pragma'] = 'no-cache'
+    response.headers['Expires'] = '0'
+    return response
+
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
 
 # In-memory server tracking
 server_state = {
