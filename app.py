@@ -17,6 +17,7 @@ from flask import Flask, render_template, request, jsonify
 if hasattr(sys.stdout, 'reconfigure'):
     sys.stdout.reconfigure(encoding='utf-8', errors='replace')
 
+import threading
 from google_fit_auth import authenticate_user, list_authenticated_users, get_token_path
 from google_fit_fetcher import fetch_user_fit_data
 from fit_pipeline import process_fit_pipeline, save_client_dataset, MODEL_FEATURE_COLS
@@ -36,7 +37,47 @@ def add_header(response):
     return response
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+PROFILES_FILE = os.path.join(BASE_DIR, "user_profiles.json")
 
+def load_user_profiles():
+    if os.path.exists(PROFILES_FILE):
+        try:
+            with open(PROFILES_FILE, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except Exception:
+            pass
+    return {
+        "user1": {"name": "Anurag Kushwaha", "initials": "AK", "email": "anuragkushwaha2207@gmail.com", "source": "Google Fit OAuth"},
+        "user2": {"name": "Family Member", "initials": "U2", "email": "user2@family.health", "source": "Google Fit OAuth"},
+        "user3": {"name": "Patient 3 (Shift Worker)", "initials": "P3", "email": "user3@health.local", "source": "Clinical Telemetry"}
+    }
+
+def save_user_profile(user_id, name, email, source="Custom Profile"):
+    profiles = load_user_profiles()
+    clean_id = "".join(c for c in user_id.lower() if c.isalnum() or c in ("-", "_"))
+    initials = "".join([part[0] for part in name.split() if part])[:2].upper()
+    if not initials:
+        initials = clean_id[:2].upper()
+    profiles[clean_id] = {
+        "name": name,
+        "initials": initials,
+        "email": email,
+        "source": source
+    }
+    with open(PROFILES_FILE, "w", encoding="utf-8") as f:
+        json.dump(profiles, f, indent=2)
+    return profiles[clean_id]
+
+def get_all_registered_users():
+    profiles = load_user_profiles()
+    auth_users = list_authenticated_users()
+    data_users = [
+        f.replace("fit_data_", "").replace(".json", "")
+        for f in os.listdir(BASE_DIR)
+        if f.startswith("fit_data_") and f.endswith(".json")
+    ]
+    all_users = sorted(list(set(list(profiles.keys()) + auth_users + data_users)))
+    return all_users
 
 # In-memory server tracking
 server_state = {
@@ -52,8 +93,8 @@ server_state = {
 
 @app.route("/")
 def index():
-    auth_users = list_authenticated_users()
-    all_users = sorted(list(set(["user1", "user2"] + auth_users)))
+    profiles = load_user_profiles()
+    all_users = get_all_registered_users()
 
     current_user = request.args.get("user", "user1")
     if current_user not in all_users and all_users:
@@ -62,6 +103,7 @@ def index():
     data_path = os.path.join(BASE_DIR, f"fit_data_{current_user}.json")
     if not os.path.exists(data_path):
         data_path = os.path.join(BASE_DIR, "fit_data_user1.json")
+
 
     records = []
     if os.path.exists(data_path):
@@ -146,23 +188,16 @@ def index():
                 "condition_class": c_class
             })
 
-    # User identity metadata
-    if current_user == "user1":
-        user_name = "Anurag Kushwaha"
-        user_initials = "AK"
-        user_email = "anuragkushwaha2207@gmail.com"
-    elif current_user == "user2":
-        user_name = "Family Member"
-        user_initials = "U2"
-        user_email = "user2@family.health"
-    else:
-        user_name = f"Patient {current_user}"
-        user_initials = current_user[:2].upper()
-        user_email = f"{current_user}@fit.local"
+    # User identity metadata from profiles
+    prof = profiles.get(current_user, {})
+    user_name = prof.get("name", f"Patient {current_user}")
+    user_initials = prof.get("initials", current_user[:2].upper())
+    user_email = prof.get("email", f"{current_user}@fit.local")
 
     return render_template(
         "index.html",
         users=all_users,
+        profiles=profiles,
         current_user=current_user,
         user_name=user_name,
         user_initials=user_initials,
@@ -179,6 +214,7 @@ def index():
         xai_json=json.dumps(prediction.get("xai", {})),
         table_records=table_records
     )
+
 
 
 
@@ -365,17 +401,116 @@ def run_aggregation():
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
 
-@app.route("/api/predict", methods=["POST"])
-def predict():
+@app.route("/api/user/create_profile", methods=["POST"])
+def create_profile():
     try:
-        vitals = request.json or {}
-        report = predict_health_risk(vitals)
+        data = request.get_json(silent=True) or {}
+        user_id = data.get("user_id", "").strip().lower()
+        clean_id = "".join(c for c in user_id if c.isalnum() or c in ("-", "_"))
+        if not clean_id:
+            return jsonify({"status": "error", "message": "Valid User ID required (e.g. user3, dad, mom)"}), 400
+
+        name = data.get("name", f"Patient {clean_id}").strip()
+        email = data.get("email", f"{clean_id}@fit.local").strip()
+        archetype = data.get("archetype", "balanced").strip()
+
+        # Save profile metadata
+        save_user_profile(clean_id, name, email, source="Clinical Telemetry")
+
+        # Generate realistic 31-day physiological records if not exists
+        data_path = os.path.join(BASE_DIR, f"fit_data_{clean_id}.json")
+        if not os.path.exists(data_path):
+            dates = pd.date_range(end=pd.Timestamp.today(), periods=31, freq='D')
+            seed = abs(hash(clean_id)) % 10000
+            rng = np.random.RandomState(seed)
+
+            # Health Archetypes
+            if archetype == "athletic":
+                hr_base, bp_sys_base, bp_dia_base, spo2_base, sleep_base, steps_base = 62.0, 116.0, 74.0, 99.0, 8.0, 9500.0
+            elif archetype == "sedentary":
+                hr_base, bp_sys_base, bp_dia_base, spo2_base, sleep_base, steps_base = 78.0, 126.0, 84.0, 98.0, 6.8, 3800.0
+            elif archetype == "sleep_deficit":
+                hr_base, bp_sys_base, bp_dia_base, spo2_base, sleep_base, steps_base = 76.0, 122.0, 80.0, 97.2, 5.2, 5400.0
+            elif archetype == "hypertensive":
+                hr_base, bp_sys_base, bp_dia_base, spo2_base, sleep_base, steps_base = 82.0, 142.0, 92.0, 96.5, 5.8, 4200.0
+            else: # balanced
+                hr_base, bp_sys_base, bp_dia_base, spo2_base, sleep_base, steps_base = 70.0, 120.0, 78.0, 98.5, 7.2, 6200.0
+
+            raw_records = []
+            for d in dates:
+                raw_records.append({
+                    "date": d.strftime("%Y-%m-%d"),
+                    "heart_rate": float(np.clip(rng.normal(hr_base, 3.5), 55, 120)),
+                    "blood_pressure_systolic": float(np.clip(rng.normal(bp_sys_base, 4.0), 105, 170)),
+                    "blood_pressure_diastolic": float(np.clip(rng.normal(bp_dia_base, 3.0), 65, 110)),
+                    "blood_oxygen": float(np.clip(rng.normal(spo2_base, 0.7), 92, 100)),
+                    "sleep_quality": float(np.clip(rng.normal(sleep_base, 0.8), 3.5, 10.0)),
+                    "steps_count": float(np.clip(rng.normal(steps_base, 1200), 1500, 18000)),
+                    "calories_burned": float(np.clip(rng.normal(steps_base * 0.04 + 1600, 150), 1400, 3200)),
+                    "glucose_level": float(np.clip(rng.normal(95.0, 8.0), 80, 160)),
+                    "body_temperature": float(np.clip(rng.normal(36.6, 0.2), 36.1, 37.5)),
+                    "respiratory_rate": float(np.clip(rng.normal(16.0, 1.2), 12, 24)),
+                    "activity_level": float(np.clip(rng.normal(steps_base / 200, 5), 10, 80))
+                })
+
+            raw_df = pd.DataFrame(raw_records)
+            processed_df = process_fit_pipeline(raw_df)
+            save_client_dataset(processed_df, data_path)
+
         return jsonify({
             "status": "success",
-            "prediction": report
+            "message": f"Profile '{name}' ({clean_id}) created successfully!",
+            "user_id": clean_id,
+            "redirect_url": f"/?user={clean_id}"
         })
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
+
+@app.route("/api/user/launch_oauth", methods=["POST"])
+def launch_oauth():
+    try:
+        data = request.get_json(silent=True) or {}
+        user_id = data.get("user_id", "").strip().lower()
+        clean_id = "".join(c for c in user_id if c.isalnum() or c in ("-", "_"))
+        if not clean_id:
+            return jsonify({"status": "error", "message": "Valid User ID required"}), 400
+
+        name = data.get("name", f"Patient {clean_id}").strip()
+        email = data.get("email", f"{clean_id}@gmail.com").strip()
+        save_user_profile(clean_id, name, email, source="Google Fit OAuth")
+
+        def oauth_worker():
+            try:
+                authenticate_user(user_id=clean_id, port=8080)
+                raw_df = fetch_user_fit_data(user_id=clean_id, days=30)
+                processed_df = process_fit_pipeline(raw_df)
+                save_client_dataset(processed_df, os.path.join(BASE_DIR, f"fit_data_{clean_id}.json"))
+            except Exception as e:
+                print(f"[OAUTH ERROR] {e}")
+
+        t = threading.Thread(target=oauth_worker, daemon=True)
+        t.start()
+
+        return jsonify({
+            "status": "success",
+            "message": f"Google Fit OAuth consent window opened in browser for '{clean_id}'. Please click Allow.",
+            "user_id": clean_id
+        })
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+@app.route("/api/user/<user_id>/auth_status", methods=["GET"])
+def check_auth_status(user_id):
+    token_path = get_token_path(user_id)
+    has_token = os.path.exists(token_path)
+    data_path = os.path.join(BASE_DIR, f"fit_data_{user_id}.json")
+    has_data = os.path.exists(data_path)
+    return jsonify({
+        "user_id": user_id,
+        "authenticated": has_token,
+        "has_data": has_data,
+        "ready": has_token or has_data
+    })
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
@@ -384,3 +519,4 @@ if __name__ == "__main__":
     print(f" Access from other devices on the same Wi-Fi using your local IP!")
     print(f"==================================================================\n")
     app.run(host="0.0.0.0", port=port, debug=False)
+

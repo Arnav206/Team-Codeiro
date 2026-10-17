@@ -1,0 +1,26 @@
+{
+  "user1": {
+    "name": "Anurag Kushwaha",
+    "initials": "AK",
+    "email": "anuragkushwaha2207@gmail.com",
+    "source": "Google Fit OAuth"
+  },
+  "user2": {
+    "name": "Family Member",
+    "initials": "U2",
+    "email": "user2@family.health",
+    "source": "Google Fit OAuth"
+  },
+  "user3": {
+    "name": "Patient 3 (Shift Worker)",
+    "initials": "P3",
+    "email": "user3@health.local",
+    "source": "Clinical Telemetry"
+  },
+  "user4": {
+    "name": "Priya Patel",
+    "initials": "PP",
+    "email": "priya@gmail.com",
+    "source": "Clinical Telemetry"
+  }
+}

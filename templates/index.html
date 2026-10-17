@@ -40,11 +40,12 @@
                     <select id="user-select" class="user-dropdown">
                         {% for u in users %}
                         <option value="{{ u }}" {% if u == current_user %}selected{% endif %}>
-                            {% if u == 'user1' %}Anurag Kushwaha (User 1){% elif u == 'user2' %}Family Member (User 2){% else %}{{ u }}{% endif %}
+                            {{ profiles.get(u, {}).get('name', u) }}
                         </option>
                         {% endfor %}
                     </select>
                     <span class="status-dot-active" title="Google Fit Connected"></span>
+
                 </div>
 
                 <button class="btn-add-account" id="connect-new-btn">
@@ -403,8 +404,90 @@
         <p>HealthPulse &bull; Decentralized Privacy-Preserving Health Intelligence &bull; Google Fit &bull; Federated Learning</p>
     </footer>
 
+    <!-- Add User Modal Dialog -->
+    <div class="modal-overlay" id="add-user-modal" style="display: none;">
+        <div class="modal-card">
+            <div class="modal-header">
+                <div>
+                    <h3 style="font-size: 1.15rem; font-weight: 700; color: var(--text-heading);">Add Patient Profile</h3>
+                    <p style="font-size: 0.78rem; color: var(--text-muted); margin-top: 2px;">Register a new user to monitor their health with Federated AI & Google Fit</p>
+                </div>
+                <button class="modal-close-btn" id="modal-close-btn">&times;</button>
+            </div>
+
+            <!-- Modal Tabs -->
+            <div class="modal-tabs">
+                <button type="button" class="tab-btn active" id="tab-btn-instant">⚡ Instant Clinical Profile</button>
+                <button type="button" class="tab-btn" id="tab-btn-oauth">🔗 Link Real Google Fit</button>
+            </div>
+
+            <!-- Form: Instant Profile -->
+            <form id="form-instant-profile">
+                <div class="form-group">
+                    <label>Patient User ID <span style="color: var(--danger);">*</span></label>
+                    <input type="text" id="instant-userid" class="form-input" placeholder="e.g. user4, dad, mom, rahul" required>
+                    <small>Short lowercase identifier (no spaces)</small>
+                </div>
+
+                <div class="form-group">
+                    <label>Patient Full Name <span style="color: var(--danger);">*</span></label>
+                    <input type="text" id="instant-name" class="form-input" placeholder="e.g. Rahul Sharma, Mom, Suresh" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Account Email (Display)</label>
+                    <input type="email" id="instant-email" class="form-input" placeholder="e.g. patient@health.local">
+                </div>
+
+                <div class="form-group">
+                    <label>Health Archetype (Telemetry Simulation)</label>
+                    <select id="instant-archetype" class="form-input">
+                        <option value="balanced">Standard / Healthy Baseline (HR ~70, BP ~120/78)</option>
+                        <option value="athletic">🏃 Active Athlete (Low Resting HR ~62, High Steps ~9500)</option>
+                        <option value="sedentary">🪑 Sedentary Worker (Low Steps ~3800, Borderline BP)</option>
+                        <option value="sleep_deficit">🌙 Shift Worker / Sleep Debt (Low Sleep ~5.2h, Elevated VRI)</option>
+                        <option value="hypertensive">🩺 Pre-Hypertensive Strain (BP ~142/92, Elevated HR)</option>
+                    </select>
+                </div>
+
+                <div class="modal-actions">
+                    <button type="button" class="btn-cancel" id="instant-cancel-btn">Cancel</button>
+                    <button type="submit" class="btn-confirm" id="instant-submit-btn">Create & Open Dashboard</button>
+                </div>
+            </form>
+
+            <!-- Form: Google Fit OAuth -->
+            <form id="form-oauth-profile" style="display: none;">
+                <div class="form-group">
+                    <label>New User ID <span style="color: var(--danger);">*</span></label>
+                    <input type="text" id="oauth-userid" class="form-input" placeholder="e.g. user4, anurag_alt" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Patient Full Name</label>
+                    <input type="text" id="oauth-name" class="form-input" placeholder="e.g. Dr. Verma">
+                </div>
+
+                <div class="form-group">
+                    <label>Google Account Email</label>
+                    <input type="email" id="oauth-email" class="form-input" placeholder="e.g. account@gmail.com">
+                </div>
+
+                <div class="oauth-info-box">
+                    <span>ℹ️ Clicking <strong>'Connect Google Account'</strong> will open Google's OAuth consent screen in your browser. After logging in, this profile will automatically be linked and synced.</span>
+                </div>
+
+                <div class="modal-actions">
+                    <button type="button" class="btn-cancel" id="oauth-cancel-btn">Cancel</button>
+                    <button type="submit" class="btn-confirm" id="oauth-submit-btn">Connect Google Account</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- Chart Hydration & Interaction Script -->
     <script>
+
         const INITIAL_TIMELINE = {{ timeline_json | safe }};
         const INITIAL_PROBS = {{ probs_json | safe }};
         const INITIAL_XAI = {{ xai_json | safe }};
@@ -669,14 +752,129 @@
                 }
             });
 
-            // Add new user
+            // Add new user modal handlers
+            const addUserModal = document.getElementById("add-user-modal");
+            const modalCloseBtn = document.getElementById("modal-close-btn");
+            const instantCancelBtn = document.getElementById("instant-cancel-btn");
+            const oauthCancelBtn = document.getElementById("oauth-cancel-btn");
+
+            const tabInstant = document.getElementById("tab-btn-instant");
+            const tabOauth = document.getElementById("tab-btn-oauth");
+            const formInstant = document.getElementById("form-instant-profile");
+            const formOauth = document.getElementById("form-oauth-profile");
+
+            function closeModal() {
+                addUserModal.style.display = "none";
+            }
+
             connectNewBtn.addEventListener("click", () => {
-                const newUserName = prompt("Enter new patient or family user ID (e.g. user3, dad, mom):", "user3");
-                if (newUserName) {
-                    alert(`To connect '${newUserName}', run:\n\npython main_pipeline.py --auth ${newUserName}\n\nin terminal to link their Google Fit account.`);
+                addUserModal.style.display = "flex";
+            });
+
+            modalCloseBtn.addEventListener("click", closeModal);
+            instantCancelBtn.addEventListener("click", closeModal);
+            oauthCancelBtn.addEventListener("click", closeModal);
+
+            // Tab switching
+            tabInstant.addEventListener("click", () => {
+                tabInstant.classList.add("active");
+                tabOauth.classList.remove("active");
+                formInstant.style.display = "block";
+                formOauth.style.display = "none";
+            });
+
+            tabOauth.addEventListener("click", () => {
+                tabOauth.classList.add("active");
+                tabInstant.classList.remove("active");
+                formOauth.style.display = "block";
+                formInstant.style.display = "none";
+            });
+
+            // Instant Profile Submission
+            formInstant.addEventListener("submit", async (e) => {
+                e.preventDefault();
+                const userId = document.getElementById("instant-userid").value.trim().toLowerCase();
+                const name = document.getElementById("instant-name").value.trim();
+                const email = document.getElementById("instant-email").value.trim();
+                const archetype = document.getElementById("instant-archetype").value;
+                const submitBtn = document.getElementById("instant-submit-btn");
+
+                submitBtn.disabled = true;
+                submitBtn.textContent = "Creating Profile...";
+
+                try {
+                    const res = await fetch("/api/user/create_profile", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ user_id: userId, name: name, email: email, archetype: archetype })
+                    });
+                    const data = await res.json();
+                    if (data.status === "success") {
+                        showToast("Profile Created!", `Patient ${name} is ready. Redirecting...`);
+                        setTimeout(() => {
+                            window.location.href = data.redirect_url;
+                        }, 1000);
+                    } else {
+                        alert(`Error: ${data.message}`);
+                        submitBtn.disabled = false;
+                        submitBtn.textContent = "Create & Open Dashboard";
+                    }
+                } catch (err) {
+                    alert(`Error: ${err}`);
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = "Create & Open Dashboard";
+                }
+            });
+
+            // Google OAuth Profile Submission
+            formOauth.addEventListener("submit", async (e) => {
+                e.preventDefault();
+                const userId = document.getElementById("oauth-userid").value.trim().toLowerCase();
+                const name = document.getElementById("oauth-name").value.trim();
+                const email = document.getElementById("oauth-email").value.trim();
+                const submitBtn = document.getElementById("oauth-submit-btn");
+
+                submitBtn.disabled = true;
+                submitBtn.textContent = "Opening Google Consent Screen...";
+
+                try {
+                    const res = await fetch("/api/user/launch_oauth", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ user_id: userId, name: name, email: email })
+                    });
+                    const data = await res.json();
+                    if (data.status === "success") {
+                        showToast("OAuth Started", "Google sign-in window launched! Click 'Allow' in Google.");
+                        submitBtn.textContent = "Waiting for Google authorization...";
+
+                        // Poll for completion
+                        const interval = setInterval(async () => {
+                            try {
+                                const check = await fetch(`/api/user/${userId}/auth_status`);
+                                const cdata = await check.json();
+                                if (cdata.ready) {
+                                    clearInterval(interval);
+                                    showToast("Google Fit Connected!", `Telemetry for ${userId} imported.`);
+                                    setTimeout(() => {
+                                        window.location.href = `/?user=${userId}`;
+                                    }, 1200);
+                                }
+                            } catch (e) {}
+                        }, 3000);
+                    } else {
+                        alert(`Error: ${data.message}`);
+                        submitBtn.disabled = false;
+                        submitBtn.textContent = "Connect Google Account";
+                    }
+                } catch (err) {
+                    alert(`Error: ${err}`);
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = "Connect Google Account";
                 }
             });
         });
     </script>
+
 </body>
 </html>
