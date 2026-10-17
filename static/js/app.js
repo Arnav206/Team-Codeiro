@@ -1,5 +1,5 @@
 /* ==========================================================================
-   HealthPulse — Clean Client Logic
+   HealthPulse — Clean Client Logic (White/Light Theme)
    Manages user profiles, Google Fit sync, and clean clinical graphs
    ========================================================================== */
 
@@ -88,9 +88,8 @@ document.addEventListener("DOMContentLoaded", () => {
             document.getElementById("val-calories").textContent = vitals.calories_burned ? Math.round(vitals.calories_burned) : "--";
 
             // 2. Health Score out of 100
-            // Convert vital risk index (range ~3 to 15) to a clean human score (100 is best)
             const vri = pred.vital_risk_index !== undefined ? pred.vital_risk_index : 5.0;
-            const healthScore = Math.max(30, Math.min(98, Math.round(100 - (vri - 4.5) * 6)));
+            const healthScore = Math.max(35, Math.min(98, Math.round(100 - (vri - 4.5) * 6)));
             document.getElementById("health-score-val").textContent = healthScore;
 
             // 3. Status Pill & Advice
@@ -99,21 +98,21 @@ document.addEventListener("DOMContentLoaded", () => {
             const advice = document.getElementById("hero-advice-text");
             const cond = pred.condition || "Normal";
 
-            pill.className = "status-pill";
+            pill.className = "condition-badge";
             if (cond === "Normal") {
                 pill.textContent = "SAFE & HEALTHY";
                 condTitle.textContent = "Optimal Health Telemetry";
-                advice.textContent = "Your resting heart rate, sleep recovery, and activity levels are in great balance today.";
+                advice.textContent = "Your resting heart rate, sleep recovery, and daily movement patterns are well within the standard clinical benchmark.";
             } else if (cond === "Mild Event") {
                 pill.classList.add("mild");
                 pill.textContent = "MILD ATTENTION";
-                condTitle.textContent = "Mild Physiological Event";
-                advice.textContent = "Slightly elevated heart rate or minor sleep deficit recorded. Ensure adequate rest & hydration.";
+                condTitle.textContent = "Mild Health Event Detected";
+                advice.textContent = "Slightly elevated resting heart rate or mild sleep deficit recorded. Ensure adequate rest & hydration.";
             } else if (cond === "Moderate Event") {
                 pill.classList.add("moderate");
                 pill.textContent = "MODERATE STRAIN";
-                condTitle.textContent = "Moderate Vital Strain Detected";
-                advice.textContent = "Noticeable vital deviation observed (blood pressure or SpO2 dip). Consider checking in with a physician.";
+                condTitle.textContent = "Moderate Vital Strain Warning";
+                advice.textContent = "Noticeable vital deviation observed (borderline blood pressure or oxygen saturation dip). Consider checking in with a physician.";
             } else {
                 pill.classList.add("severe");
                 pill.textContent = "HIGH ALERT";
@@ -128,15 +127,15 @@ document.addEventListener("DOMContentLoaded", () => {
                 warnBox.style.display = "flex";
                 pred.anomalies.forEach(a => {
                     const span = document.createElement("span");
-                    span.className = "warn-item";
-                    span.textContent = `⚠️ ${a}`;
+                    span.className = "clinical-alert-pill";
+                    span.textContent = `⚠️ Alert: ${a}`;
                     warnBox.appendChild(span);
                 });
             } else {
                 warnBox.style.display = "none";
             }
 
-            // 5. Render Clean Graphs
+            // 5. Render Clean Graphs (Light Theme)
             renderRiskProbChart(pred.probabilities || {});
             renderTimelineChart(data.timeline || []);
 
@@ -145,7 +144,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
-    // Graph 1: Disease Risk Probability Breakdown
+    // Graph 1: Disease Risk Probability Breakdown (Light Mode)
     function renderRiskProbChart(probs) {
         const ctx = document.getElementById("riskProbChart").getContext("2d");
         const labels = ["Normal", "Mild", "Moderate", "Severe"];
@@ -165,13 +164,13 @@ document.addEventListener("DOMContentLoaded", () => {
                 datasets: [{
                     data: dataVals,
                     backgroundColor: [
-                        "#10b981", // Normal
-                        "#3b82f6", // Mild
-                        "#f59e0b", // Moderate
-                        "#ef4444"  // Severe
+                        "#10b981", // Normal - Green
+                        "#2563eb", // Mild - Blue
+                        "#f59e0b", // Moderate - Orange
+                        "#ef4444"  // Severe - Red
                     ],
-                    borderRadius: 8,
-                    barThickness: 36
+                    borderRadius: 6,
+                    barThickness: 32
                 }]
             },
             options: {
@@ -180,6 +179,9 @@ document.addEventListener("DOMContentLoaded", () => {
                 plugins: {
                     legend: { display: false },
                     tooltip: {
+                        backgroundColor: "#1e293b",
+                        titleColor: "#ffffff",
+                        bodyColor: "#f1f5f9",
                         callbacks: {
                             label: (ctx) => ` Probability: ${ctx.raw}%`
                         }
@@ -188,19 +190,19 @@ document.addEventListener("DOMContentLoaded", () => {
                 scales: {
                     x: {
                         grid: { display: false },
-                        ticks: { color: "#94a3b8", font: { family: 'Inter', size: 12, weight: '500' } }
+                        ticks: { color: "#475569", font: { family: 'Inter', size: 12, weight: '500' } }
                     },
                     y: {
                         max: 100,
-                        grid: { color: "rgba(255, 255, 255, 0.05)" },
-                        ticks: { color: "#64748b", callback: v => `${v}%` }
+                        grid: { color: "#f1f5f9" },
+                        ticks: { color: "#94a3b8", callback: v => `${v}%` }
                     }
                 }
             }
         });
     }
 
-    // Graph 2: 14-Day Vitals Trend
+    // Graph 2: 14-Day Vitals Trend (Light Mode)
     function renderTimelineChart(timeline) {
         const ctx = document.getElementById("timelineChart").getContext("2d");
         const labels = timeline.map((_, i) => `D${i + 1}`);
@@ -218,16 +220,17 @@ document.addEventListener("DOMContentLoaded", () => {
                         label: "Heart Rate (BPM)",
                         data: hrData,
                         borderColor: "#ef4444",
-                        backgroundColor: "rgba(239, 68, 68, 0.08)",
+                        backgroundColor: "rgba(239, 68, 68, 0.05)",
                         tension: 0.35,
                         fill: true,
                         yAxisID: "y-hr",
-                        pointRadius: 2
+                        pointRadius: 2,
+                        pointBackgroundColor: "#ef4444"
                     },
                     {
                         label: "Steps",
                         data: stepsData,
-                        borderColor: "#3b82f6",
+                        borderColor: "#2563eb",
                         backgroundColor: "transparent",
                         borderDash: [4, 4],
                         tension: 0.3,
@@ -241,25 +244,30 @@ document.addEventListener("DOMContentLoaded", () => {
                 maintainAspectRatio: false,
                 plugins: {
                     legend: {
-                        labels: { color: "#94a3b8", font: { family: 'Inter', size: 11 } }
+                        labels: { color: "#475569", font: { family: 'Inter', size: 11, weight: '500' } }
+                    },
+                    tooltip: {
+                        backgroundColor: "#1e293b",
+                        titleColor: "#ffffff",
+                        bodyColor: "#f1f5f9"
                     }
                 },
                 scales: {
                     x: {
-                        grid: { color: "rgba(255,255,255,0.03)" },
-                        ticks: { color: "#64748b" }
+                        grid: { color: "#f8fafc" },
+                        ticks: { color: "#94a3b8" }
                     },
                     "y-hr": {
                         type: "linear",
                         position: "left",
-                        grid: { color: "rgba(255,255,255,0.04)" },
+                        grid: { color: "#f1f5f9" },
                         ticks: { color: "#ef4444" }
                     },
                     "y-steps": {
                         type: "linear",
                         position: "right",
                         grid: { display: false },
-                        ticks: { color: "#3b82f6" }
+                        ticks: { color: "#2563eb" }
                     }
                 }
             }
@@ -291,10 +299,10 @@ document.addEventListener("DOMContentLoaded", () => {
         } finally {
             refreshFitBtn.disabled = false;
             refreshFitBtn.innerHTML = `
-                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
                 </svg>
-                <span>Sync Now</span>`;
+                <span>Sync Telemetry</span>`;
         }
     });
 
@@ -314,7 +322,7 @@ document.addEventListener("DOMContentLoaded", () => {
             if (data.status === "success") {
                 showToast(
                     "Data Protected & Synchronized!",
-                    "Trained locally on your device with Differential Privacy (Laplace noise). Only private weights were sent to the central server. Raw health data never left your device."
+                    "Model trained locally on this device using Differential Privacy (Laplace noise). Only private mathematical parameters were shared with the central server. Raw health records never left your device."
                 );
             } else {
                 alert(`Error: ${data.message}`);
@@ -324,18 +332,18 @@ document.addEventListener("DOMContentLoaded", () => {
         } finally {
             trainOnDeviceBtn.disabled = false;
             trainOnDeviceBtn.innerHTML = `
-                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
                 </svg>
-                <span>Save & Protect Privately</span>`;
+                <span>Sync & Protect Privately</span>`;
         }
     });
 
     // Add New User / Connect Google Fit
     connectNewBtn.addEventListener("click", () => {
-        const newUserName = prompt("Enter new user ID (e.g. user3, dad, mom):", "user3");
+        const newUserName = prompt("Enter new patient or family user ID (e.g. user3, dad, mom):", "user3");
         if (newUserName) {
-            alert(`To connect '${newUserName}', run: \n\npython main_pipeline.py --auth ${newUserName}\n\nin terminal to link their Google account.`);
+            alert(`To connect '${newUserName}', run: \n\npython main_pipeline.py --auth ${newUserName}\n\nin terminal to authenticate their Google Fit account.`);
         }
     });
 

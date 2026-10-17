@@ -1,65 +1,66 @@
 /* ==========================================================================
-   HealthPulse — Clean, Normal, Consumer-Friendly Health UI
-   Clean, modern healthcare app layout with intuitive profile & graphs
+   HealthPulse — Professional White/Light Healthcare Design System
+   Clean, Apple Health & clinical aesthetic with natural contrast & typography
    ========================================================================== */
 
 :root {
-    --bg-main: #0c111d;
-    --card-bg: #151d30;
-    --card-border: rgba(255, 255, 255, 0.08);
-    --card-hover: rgba(255, 255, 255, 0.12);
-
-    --primary-blue: #3b82f6;
-    --primary-blue-light: #60a5fa;
-    --emerald-green: #10b981;
-    --emerald-bg: rgba(16, 185, 129, 0.12);
-    --amber-orange: #f59e0b;
-    --rose-red: #ef4444;
-    --purple-sleep: #8b5cf6;
-
-    --text-title: #ffffff;
-    --text-body: #94a3b8;
-    --text-muted: #64748b;
-
+    --bg-page: #f8fafc;
+    --bg-card: #ffffff;
+    --border-card: #e2e8f0;
+    --border-card-hover: #cbd5e1;
+    
+    --primary: #2563eb;
+    --primary-light: #eff6ff;
+    --primary-hover: #1d4ed8;
+    
+    --success: #10b981;
+    --success-light: #ecfdf5;
+    --warning: #f59e0b;
+    --warning-light: #fffbeb;
+    --danger: #ef4444;
+    --danger-light: #fef2f2;
+    
+    --text-heading: #0f172a;
+    --text-body: #475569;
+    --text-muted: #94a3b8;
+    
     --font-heading: 'Plus Jakarta Sans', -apple-system, sans-serif;
     --font-body: 'Inter', -apple-system, sans-serif;
-
+    
     --radius-sm: 8px;
-    --radius-md: 14px;
-    --radius-lg: 20px;
-    --shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.3);
+    --radius-md: 12px;
+    --radius-lg: 16px;
+    --shadow-card: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.05);
+    --shadow-card-hover: 0 4px 6px -1px rgba(0, 0, 0, 0.08), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
 }
 
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
+* { margin: 0; padding: 0; box-sizing: border-box; }
 
 body {
-    background-color: var(--bg-main);
-    color: var(--text-title);
+    background-color: var(--bg-page);
+    color: var(--text-heading);
     font-family: var(--font-body);
     min-height: 100vh;
     display: flex;
     flex-direction: column;
     line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
 }
 
-/* ================= 1. CLEAN TOP NAVBAR ================= */
+/* Top Clean Navbar */
 .navbar {
-    background: rgba(15, 23, 42, 0.85);
-    backdrop-filter: blur(12px);
-    border-bottom: 1px solid var(--card-border);
+    background: #ffffff;
+    border-bottom: 1px solid var(--border-card);
     position: sticky;
     top: 0;
     z-index: 50;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.03);
 }
 
 .nav-container {
-    max-width: 1140px;
+    max-width: 1160px;
     margin: 0 auto;
-    padding: 14px 20px;
+    padding: 14px 24px;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -71,186 +72,164 @@ body {
     gap: 12px;
 }
 
-.logo-icon {
+.logo-box {
     width: 38px;
     height: 38px;
-    background: linear-gradient(135deg, #2563eb, #3b82f6);
-    border-radius: 10px;
+    background: var(--primary);
+    border-radius: var(--radius-sm);
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #fff;
-    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+    color: #ffffff;
+    box-shadow: 0 2px 8px rgba(37, 99, 235, 0.25);
 }
 
-.brand-info {
-    display: flex;
-    flex-direction: column;
-}
-
-.brand-title {
+.brand-text h1 {
     font-family: var(--font-heading);
     font-size: 1.25rem;
     font-weight: 700;
+    color: var(--text-heading);
     letter-spacing: -0.02em;
 }
 
-.brand-sub {
+.brand-text p {
     font-size: 0.72rem;
     color: var(--text-muted);
+    font-weight: 500;
 }
 
-/* Profile Section (Right side) */
-.nav-user-section {
+/* User Profile & Actions */
+.nav-right {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 14px;
 }
 
-.user-profile-card {
+.user-profile-badge {
     display: flex;
     align-items: center;
     gap: 10px;
-    background: rgba(255, 255, 255, 0.04);
-    border: 1px solid var(--card-border);
-    padding: 6px 12px;
+    background: #f1f5f9;
+    border: 1px solid var(--border-card);
+    padding: 6px 14px;
     border-radius: 9999px;
     transition: 0.2s;
 }
 
-.user-profile-card:hover {
-    border-color: var(--card-hover);
-}
-
-.user-avatar {
-    width: 32px;
-    height: 32px;
+.avatar-circle {
+    width: 30px;
+    height: 30px;
     border-radius: 50%;
-    background: linear-gradient(135deg, #10b981, #059669);
-    color: #fff;
+    background: var(--primary);
+    color: #ffffff;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-weight: 700;
-    font-size: 0.75rem;
     font-family: var(--font-heading);
-}
-
-.user-meta {
-    display: flex;
-    flex-direction: column;
+    font-size: 0.75rem;
+    font-weight: 700;
 }
 
 .user-dropdown {
     background: transparent;
-    color: var(--text-title);
     border: none;
+    color: var(--text-heading);
     font-family: var(--font-heading);
     font-size: 0.82rem;
     font-weight: 600;
-    outline: none;
     cursor: pointer;
+    outline: none;
 }
 
 .user-dropdown option {
-    background: #0f172a;
-    color: #fff;
+    background: #ffffff;
+    color: var(--text-heading);
 }
 
-.sync-tag {
-    font-size: 0.68rem;
-    color: #34d399;
-    display: flex;
-    align-items: center;
-    gap: 5px;
-}
-
-.dot-online {
-    width: 6px;
-    height: 6px;
+.status-dot-active {
+    width: 7px;
+    height: 7px;
     border-radius: 50%;
-    background-color: var(--emerald-green);
+    background-color: var(--success);
+    box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
 }
 
-.btn-connect-google {
+.btn-add-account {
     display: inline-flex;
     align-items: center;
     gap: 6px;
     background: #ffffff;
-    color: #1f2937;
-    border: none;
-    padding: 7px 12px;
+    color: var(--text-body);
+    border: 1px solid var(--border-card);
+    padding: 7px 14px;
     border-radius: 9999px;
-    font-size: 0.75rem;
+    font-size: 0.78rem;
     font-weight: 600;
     cursor: pointer;
     transition: 0.2s;
 }
 
-.btn-connect-google:hover {
-    background: #f1f5f9;
+.btn-add-account:hover {
+    background: #f8fafc;
+    border-color: var(--border-card-hover);
 }
 
-/* ================= 2. APP BODY & LAYOUT ================= */
-.app-body {
+/* App Body */
+.app-main {
     flex: 1;
-    padding: 24px 20px;
+    padding: 28px 24px 48px;
 }
 
-.content-wrapper {
-    max-width: 1140px;
+.container {
+    max-width: 1160px;
     margin: 0 auto;
     display: flex;
     flex-direction: column;
     gap: 24px;
 }
 
-/* Card Base */
-.card {
-    background: var(--card-bg);
-    border: 1px solid var(--card-border);
+/* 1. Google Fit Permission Banner */
+.permission-banner {
+    background: #ffffff;
+    border: 1px solid var(--border-card);
     border-radius: var(--radius-md);
-    box-shadow: var(--shadow);
-}
-
-/* ================= 3. PERMISSION ACTION STRIP ================= */
-.permission-card {
-    background: linear-gradient(135deg, #131c33 0%, #172342 100%);
-    border: 1px solid rgba(59, 130, 246, 0.25);
-    border-radius: var(--radius-md);
-    padding: 16px 20px;
+    padding: 18px 24px;
     display: flex;
     justify-content: space-between;
     align-items: center;
     flex-wrap: wrap;
     gap: 16px;
+    box-shadow: var(--shadow-card);
 }
 
-.perm-left {
+.perm-info {
     display: flex;
     align-items: center;
     gap: 14px;
 }
 
-.fit-logo-circle {
+.google-fit-icon {
     width: 44px;
     height: 44px;
-    border-radius: 50%;
-    background: rgba(37, 99, 235, 0.15);
+    border-radius: var(--radius-sm);
+    background: #eff6ff;
     display: flex;
     align-items: center;
     justify-content: center;
+    color: var(--primary);
 }
 
-.perm-title {
+.perm-info h3 {
     font-family: var(--font-heading);
-    font-size: 0.98rem;
+    font-size: 1rem;
     font-weight: 600;
+    color: var(--text-heading);
 }
 
-.perm-desc {
-    font-size: 0.8rem;
+.perm-info p {
+    font-size: 0.82rem;
     color: var(--text-body);
+    margin-top: 2px;
 }
 
 .perm-actions {
@@ -258,364 +237,400 @@ body {
     gap: 10px;
 }
 
-.btn-action-outline {
+.btn-sync {
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    background: transparent;
-    border: 1px solid rgba(255, 255, 255, 0.15);
-    color: #fff;
-    padding: 8px 14px;
-    border-radius: var(--radius-sm);
-    font-size: 0.82rem;
-    font-weight: 500;
-    cursor: pointer;
-    transition: 0.2s;
-}
-
-.btn-action-outline:hover {
-    background: rgba(255, 255, 255, 0.05);
-    border-color: rgba(255, 255, 255, 0.3);
-}
-
-.btn-action-primary {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    background: #2563eb;
-    border: none;
-    color: #fff;
+    background: #ffffff;
+    border: 1px solid var(--border-card);
+    color: var(--text-heading);
     padding: 8px 16px;
     border-radius: var(--radius-sm);
     font-size: 0.82rem;
     font-weight: 600;
     cursor: pointer;
     transition: 0.2s;
-    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
 }
 
-.btn-action-primary:hover {
-    background: #1d4ed8;
+.btn-sync:hover {
+    background: #f8fafc;
+    border-color: var(--border-card-hover);
 }
 
-/* Privacy Toast */
-.privacy-toast {
-    background: #064e3b;
-    border: 1px solid #059669;
-    color: #a7f3d0;
-    padding: 12px 18px;
+.btn-protect {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--primary);
+    border: 1px solid var(--primary);
+    color: #ffffff;
+    padding: 8px 18px;
+    border-radius: var(--radius-sm);
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.2s;
+    box-shadow: 0 2px 6px rgba(37, 99, 235, 0.2);
+}
+
+.btn-protect:hover {
+    background: var(--primary-hover);
+}
+
+/* Toast Alert */
+.toast-box {
+    background: #ecfdf5;
+    border: 1px solid #a7f3d0;
+    color: #065f46;
+    padding: 14px 20px;
     border-radius: var(--radius-sm);
     display: flex;
     align-items: center;
     gap: 12px;
+    box-shadow: var(--shadow-card);
 }
 
-.toast-icon {
-    font-size: 1.4rem;
-}
-
-.toast-content strong {
-    color: #fff;
+.toast-box strong {
     display: block;
     font-size: 0.85rem;
+    color: #064e3b;
 }
 
-.toast-content p {
-    font-size: 0.78rem;
+.toast-box p {
+    font-size: 0.8rem;
+    color: #047857;
     margin-top: 2px;
 }
 
-.toast-close {
+.toast-close-btn {
     margin-left: auto;
     background: none;
     border: none;
-    color: #a7f3d0;
-    font-size: 1.2rem;
+    font-size: 1.25rem;
+    color: #047857;
     cursor: pointer;
 }
 
-/* ================= 4. HEALTH PREDICTION SCORE BANNER ================= */
-.health-hero-card {
-    background: linear-gradient(135deg, #131c33 0%, #172545 100%);
-    border: 1px solid var(--card-border);
+/* 2. Health Score & Clinical Assessment Card */
+.health-hero {
+    background: #ffffff;
+    border: 1px solid var(--border-card);
     border-radius: var(--radius-lg);
-    padding: 24px 28px;
+    padding: 26px 30px;
     display: flex;
     justify-content: space-between;
     align-items: center;
     flex-wrap: wrap;
-    gap: 20px;
-    position: relative;
-    overflow: hidden;
+    gap: 24px;
+    box-shadow: var(--shadow-card);
 }
 
-.hero-condition {
+.condition-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 9999px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    background: var(--success-light);
+    color: #047857;
+}
+
+.condition-badge.mild {
+    background: var(--primary-light);
+    color: #1d4ed8;
+}
+
+.condition-badge.moderate {
+    background: var(--warning-light);
+    color: #b45309;
+}
+
+.condition-badge.severe {
+    background: var(--danger-light);
+    color: #b91c1c;
+}
+
+.hero-title {
     font-family: var(--font-heading);
     font-size: 1.6rem;
     font-weight: 700;
-    margin: 8px 0 4px;
+    color: var(--text-heading);
+    margin: 10px 0 6px;
 }
 
-.hero-advice {
+.hero-desc {
+    font-size: 0.9rem;
     color: var(--text-body);
-    font-size: 0.88rem;
-    max-width: 600px;
+    max-width: 620px;
 }
 
-.status-pill {
-    display: inline-block;
-    padding: 3px 10px;
-    border-radius: 9999px;
-    font-size: 0.7rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    background: rgba(16, 185, 129, 0.15);
-    color: #34d399;
-}
-
-.status-pill.mild {
-    background: rgba(59, 130, 246, 0.15);
-    color: #60a5fa;
-}
-
-.status-pill.moderate {
-    background: rgba(245, 158, 11, 0.15);
-    color: #fbbf24;
-}
-
-.status-pill.severe {
-    background: rgba(239, 68, 68, 0.15);
-    color: #f87171;
-}
-
-.clinical-warnings {
-    margin-top: 10px;
+.alerts-wrapper {
+    margin-top: 12px;
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 6px;
 }
 
-.warn-item {
-    font-size: 0.8rem;
-    color: #fca5a5;
-    background: rgba(239, 68, 68, 0.1);
-    padding: 4px 8px;
-    border-radius: 4px;
+.clinical-alert-pill {
+    font-size: 0.82rem;
+    color: #991b1b;
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    padding: 5px 12px;
+    border-radius: var(--radius-sm);
     display: inline-block;
 }
 
-.hero-score-box {
+.score-display-card {
     display: flex;
     flex-direction: column;
     align-items: center;
+    background: #f8fafc;
+    border: 1px solid var(--border-card);
+    padding: 16px 24px;
+    border-radius: var(--radius-md);
 }
 
-.score-circle {
-    width: 88px;
-    height: 88px;
+.score-circle-white {
+    width: 80px;
+    height: 80px;
     border-radius: 50%;
-    background: rgba(255, 255, 255, 0.03);
-    border: 3px solid #10b981;
+    background: #ffffff;
+    border: 4px solid var(--success);
     display: flex;
     align-items: baseline;
     justify-content: center;
-    padding-top: 24px;
-    box-shadow: 0 0 20px rgba(16, 185, 129, 0.2);
+    padding-top: 20px;
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.15);
 }
 
-.score-number {
+.score-num {
     font-family: var(--font-heading);
-    font-size: 2.2rem;
+    font-size: 2rem;
     font-weight: 800;
-    color: #fff;
+    color: var(--text-heading);
 }
 
-.score-sub {
-    font-size: 0.8rem;
+.score-denom {
+    font-size: 0.75rem;
     color: var(--text-muted);
+    font-weight: 600;
 }
 
-.score-label {
-    font-size: 0.72rem;
+.score-caption {
+    font-size: 0.75rem;
     color: var(--text-muted);
     font-weight: 600;
     text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-top: 8px;
+}
+
+/* Section Headings */
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
     margin-top: 6px;
 }
 
-/* ================= 5. CHARTS & GRAPHS SECTION ================= */
-.section-heading {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-}
-
-.section-heading h3 {
+.section-header h2 {
     font-family: var(--font-heading);
     font-size: 1.15rem;
-    font-weight: 600;
+    font-weight: 700;
+    color: var(--text-heading);
 }
 
-.section-sub {
-    font-size: 0.8rem;
+.section-header p {
+    font-size: 0.82rem;
     color: var(--text-muted);
 }
 
-.charts-grid {
+/* 3. Graphs Section */
+.graphs-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 18px;
+    gap: 20px;
 }
 
-@media (max-width: 820px) {
-    .charts-grid {
-        grid-template-columns: 1fr;
-    }
+@media (max-width: 850px) {
+    .graphs-grid { grid-template-columns: 1fr; }
 }
 
-.chart-card {
-    padding: 18px 20px;
+.graph-card {
+    background: #ffffff;
+    border: 1px solid var(--border-card);
+    border-radius: var(--radius-md);
+    padding: 20px 24px;
+    box-shadow: var(--shadow-card);
     display: flex;
     flex-direction: column;
 }
 
-.card-header {
+.graph-card-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 14px;
+    margin-bottom: 16px;
 }
 
-.card-header h4 {
+.graph-card-header h3 {
     font-family: var(--font-heading);
     font-size: 0.95rem;
     font-weight: 600;
+    color: var(--text-heading);
 }
 
-.badge-neutral {
-    font-size: 0.7rem;
-    color: var(--text-muted);
-    background: rgba(255, 255, 255, 0.05);
-    padding: 2px 8px;
-    border-radius: 4px;
+.tag-gray {
+    font-size: 0.72rem;
+    color: var(--text-body);
+    background: #f1f5f9;
+    padding: 3px 10px;
+    border-radius: 9999px;
+    font-weight: 500;
 }
 
-.chart-wrapper {
+.chart-box {
     position: relative;
     height: 220px;
     width: 100%;
 }
 
-.risk-legend {
+.graph-legend-strip {
     display: flex;
-    justify-content: space-around;
-    padding-top: 12px;
-    border-top: 1px solid rgba(255, 255, 255, 0.05);
-    margin-top: 10px;
+    justify-content: space-between;
+    padding-top: 14px;
+    border-top: 1px solid #f1f5f9;
+    margin-top: 12px;
+    font-size: 0.75rem;
+    color: var(--text-body);
 }
 
-.leg-item {
-    font-size: 0.72rem;
-    color: var(--text-body);
+.legend-item {
     display: flex;
     align-items: center;
     gap: 6px;
 }
 
-.leg-dot {
+.legend-dot {
     width: 8px;
     height: 8px;
     border-radius: 50%;
 }
 
-.c-green { background-color: #10b981; }
-.c-blue { background-color: #3b82f6; }
-.c-orange { background-color: #f59e0b; }
-.c-red { background-color: #ef4444; }
+.dot-green { background: #10b981; }
+.dot-blue { background: #2563eb; }
+.dot-amber { background: #f59e0b; }
+.dot-red { background: #ef4444; }
 
-/* ================= 6. VITALS GRID ================= */
-.vitals-grid {
+/* 4. Vitals Grid */
+.vitals-cards-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-    gap: 14px;
+    grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+    gap: 16px;
 }
 
-.vital-card {
-    padding: 16px;
+.v-card {
+    background: #ffffff;
+    border: 1px solid var(--border-card);
+    border-radius: var(--radius-md);
+    padding: 18px;
+    box-shadow: var(--shadow-card);
     display: flex;
     flex-direction: column;
     justify-content: space-between;
+    transition: 0.2s;
 }
 
-.v-head {
+.v-card:hover {
+    box-shadow: var(--shadow-card-hover);
+    border-color: var(--border-card-hover);
+}
+
+.v-card-top {
     display: flex;
     align-items: center;
     gap: 8px;
+    margin-bottom: 12px;
+}
+
+.v-emoji {
+    font-size: 1.15rem;
+}
+
+.v-title {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    font-weight: 600;
+}
+
+.v-card-mid {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
     margin-bottom: 8px;
 }
 
-.v-icon {
-    font-size: 1.1rem;
+.v-main-val {
+    font-family: var(--font-heading);
+    font-size: 1.65rem;
+    font-weight: 700;
+    color: var(--text-heading);
 }
 
-.v-label {
-    font-size: 0.78rem;
+.v-unit-label {
+    font-size: 0.75rem;
     color: var(--text-muted);
     font-weight: 500;
 }
 
-.v-body {
-    display: flex;
-    align-items: baseline;
-    gap: 4px;
-    margin-bottom: 6px;
-}
-
-.v-value {
-    font-family: var(--font-heading);
-    font-size: 1.55rem;
-    font-weight: 700;
-}
-
-.v-unit {
+.v-status-tag {
     font-size: 0.72rem;
-    color: var(--text-muted);
+    color: #059669;
+    font-weight: 500;
 }
 
-.v-status {
-    font-size: 0.68rem;
-    color: #34d399;
-}
-
-.step-progress {
+.progress-track {
     width: 100%;
-    height: 5px;
-    background: rgba(255, 255, 255, 0.06);
+    height: 6px;
+    background: #f1f5f9;
     border-radius: 9999px;
     overflow: hidden;
-    margin-top: 4px;
+    margin-top: 6px;
 }
 
-.step-bar {
+.progress-fill {
     height: 100%;
-    background: #3b82f6;
+    background: var(--primary);
     border-radius: 9999px;
 }
 
-/* ================= 7. FOOTER NOTE ================= */
-.privacy-footer-note {
-    background: rgba(255, 255, 255, 0.02);
-    border: 1px solid rgba(255, 255, 255, 0.04);
-    padding: 12px 18px;
+/* 5. Clean Footer */
+.privacy-guarantee-strip {
+    background: #ffffff;
+    border: 1px solid var(--border-card);
     border-radius: var(--radius-sm);
-    font-size: 0.78rem;
-    color: var(--text-muted);
+    padding: 14px 20px;
+    font-size: 0.8rem;
+    color: var(--text-body);
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 12px;
+    box-shadow: var(--shadow-card);
 }
 
-.shield-icon {
-    font-size: 1.1rem;
+.privacy-guarantee-strip strong {
+    color: var(--text-heading);
+}
+
+.app-footer {
+    text-align: center;
+    padding: 20px;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    border-top: 1px solid var(--border-card);
+    background: #ffffff;
+    margin-top: auto;
 }
