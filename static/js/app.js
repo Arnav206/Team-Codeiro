@@ -1,90 +1,72 @@
 /* ==========================================================================
-   HealthSync AI — Client Application Logic
-   Handles API communication, real-time telemetry rendering, and Chart.js
+   HealthPulse — Clean Client Logic
+   Manages user profiles, Google Fit sync, and clean clinical graphs
    ========================================================================== */
 
 document.addEventListener("DOMContentLoaded", () => {
-    // Tab Switching
-    const tabs = document.querySelectorAll(".nav-tab");
-    const panes = document.querySelectorAll(".tab-pane");
+    const userSelect = document.getElementById("user-select");
+    const userAvatar = document.getElementById("nav-user-avatar");
+    const refreshFitBtn = document.getElementById("refresh-fit-btn");
+    const trainOnDeviceBtn = document.getElementById("train-ondevice-btn");
+    const connectNewBtn = document.getElementById("connect-new-btn");
+    const privacyToast = document.getElementById("privacy-toast");
+    const toastCloseBtn = document.getElementById("toast-close-btn");
 
-    tabs.forEach(tab => {
-        tab.addEventListener("click", () => {
-            tabs.forEach(t => t.classList.remove("active"));
-            panes.forEach(p => p.classList.remove("active"));
-
-            tab.classList.add("active");
-            const targetPane = document.getElementById(tab.dataset.tab);
-            if (targetPane) targetPane.classList.add("active");
-        });
-    });
-
-    // Chart references
     let timelineChart = null;
     let riskProbChart = null;
 
-    // Elements
-    const userSelect = document.getElementById("user-select");
-    const refreshFitBtn = document.getElementById("refresh-fit-btn");
-    const trainOnDeviceBtn = document.getElementById("train-ondevice-btn");
-    const triggerFedAvgBtn = document.getElementById("trigger-fedavg-btn");
-    const clientTerminal = document.getElementById("client-terminal-logs");
-    const serverTerminal = document.getElementById("server-terminal-logs");
+    // Toast dismissal
+    toastCloseBtn.addEventListener("click", () => {
+        privacyToast.style.display = "none";
+    });
 
-    // Logging helpers
-    function logClient(msg, type = "info") {
-        const p = document.createElement("p");
-        p.className = `term-line ${type}`;
-        p.textContent = msg;
-        clientTerminal.appendChild(p);
-        clientTerminal.scrollTop = clientTerminal.scrollHeight;
+    function showToast(title, desc) {
+        document.getElementById("toast-title").textContent = title;
+        document.getElementById("toast-desc").textContent = desc;
+        privacyToast.style.display = "flex";
+        setTimeout(() => {
+            privacyToast.style.display = "none";
+        }, 8000);
     }
 
-    function logServer(msg, type = "info") {
-        const p = document.createElement("p");
-        p.className = `term-line ${type}`;
-        p.textContent = msg;
-        serverTerminal.appendChild(p);
-        serverTerminal.scrollTop = serverTerminal.scrollHeight;
+    // User Avatar Initials Map
+    function getInitials(name) {
+        if (!name) return "U";
+        if (name.toLowerCase().includes("user1") || name.toLowerCase().includes("anurag")) return "AK";
+        if (name.toLowerCase().includes("user2")) return "U2";
+        if (name.toLowerCase().includes("user3")) return "U3";
+        return name.slice(0, 2).toUpperCase();
     }
 
-    // Initialize System Status
-    async function loadSystemStatus() {
-        try {
-            const res = await fetch("/api/status");
-            const data = await res.json();
-            document.getElementById("header-client-count").textContent = `${data.active_client_count} Nodes Active`;
-            document.getElementById("stat-active-nodes").textContent = data.active_client_count;
-            document.getElementById("stat-global-acc").textContent = `${data.last_global_accuracy}%`;
-            document.getElementById("stat-epsilon").textContent = data.privacy_budget_epsilon;
-            document.getElementById("stat-records").textContent = data.total_records_processed;
-        } catch (err) {
-            console.error("Status load failed", err);
-        }
-    }
-
-    // Initialize User Dropdown
-    async function loadUserList() {
+    // Load available users
+    async function loadUserDropdown() {
         try {
             const res = await fetch("/api/users");
             const data = await res.json();
             userSelect.innerHTML = "";
+
             data.users.forEach(u => {
                 const opt = document.createElement("option");
                 opt.value = u.user_id;
-                opt.textContent = `${u.user_id.toUpperCase()} ${u.authenticated ? '(Verified Google Fit)' : '(Default)'}`;
+                const displayName = u.user_id === "user1" ? "Anurag Kushwaha (User 1)" :
+                                   u.user_id === "user2" ? "Family Member (User 2)" :
+                                   `Patient (${u.user_id})`;
+                opt.textContent = `${displayName} ${u.authenticated ? '✓' : ''}`;
                 userSelect.appendChild(opt);
             });
+
             if (data.users.length > 0) {
-                loadPatientData(userSelect.value);
+                userAvatar.textContent = getInitials(userSelect.value);
+                loadPatientVitals(userSelect.value);
             }
         } catch (err) {
-            console.error("Users load failed", err);
+            console.error("Could not load users", err);
         }
     }
 
-    // Load Specific Patient Telemetry
-    async function loadPatientData(userId) {
+    // Load Vitals & Predictions for Selected User
+    async function loadPatientVitals(userId) {
+        userAvatar.textContent = getInitials(userId);
         try {
             const res = await fetch(`/api/user/${userId}/data`);
             const data = await res.json();
@@ -92,81 +74,138 @@ document.addEventListener("DOMContentLoaded", () => {
             const vitals = data.latest_vitals || {};
             const pred = data.prediction || {};
 
-            // Update Vitals Cards
-            document.getElementById("vital-hr").textContent = vitals.heart_rate ? Math.round(vitals.heart_rate) : "--";
-            document.getElementById("vital-bp").textContent = (vitals.blood_pressure_systolic && vitals.blood_pressure_diastolic) 
+            // 1. Update Vitals Grid
+            document.getElementById("val-hr").textContent = vitals.heart_rate ? Math.round(vitals.heart_rate) : "--";
+            document.getElementById("val-bp").textContent = (vitals.blood_pressure_systolic && vitals.blood_pressure_diastolic) 
                 ? `${Math.round(vitals.blood_pressure_systolic)}/${Math.round(vitals.blood_pressure_diastolic)}` : "--/--";
-            document.getElementById("vital-spo2").textContent = vitals.blood_oxygen ? Math.round(vitals.blood_oxygen) : "--";
-            
+            document.getElementById("val-spo2").textContent = vitals.blood_oxygen ? Math.round(vitals.blood_oxygen) : "--";
+
             const steps = vitals.steps_count ? Math.round(vitals.steps_count) : 0;
-            document.getElementById("vital-steps").textContent = steps.toLocaleString();
-            document.getElementById("steps-bar").style.width = `${Math.min(100, (steps / 10000) * 100)}%`;
+            document.getElementById("val-steps").textContent = steps.toLocaleString();
+            document.getElementById("step-fill-bar").style.width = `${Math.min(100, (steps / 10000) * 100)}%`;
 
-            document.getElementById("vital-sleep").textContent = vitals.sleep_quality ? (vitals.sleep_quality).toFixed(1) : "--";
-            document.getElementById("vital-calories").textContent = vitals.calories_burned ? Math.round(vitals.calories_burned) : "--";
+            document.getElementById("val-sleep").textContent = vitals.sleep_quality ? (vitals.sleep_quality).toFixed(1) : "--";
+            document.getElementById("val-calories").textContent = vitals.calories_burned ? Math.round(vitals.calories_burned) : "--";
 
-            // Update Condition Banner
-            const banner = document.getElementById("condition-banner");
-            const badge = document.getElementById("condition-badge");
-            const title = document.getElementById("condition-title");
-            const sub = document.getElementById("condition-subtitle");
-            const vri = document.getElementById("vital-risk-num");
+            // 2. Health Score out of 100
+            // Convert vital risk index (range ~3 to 15) to a clean human score (100 is best)
+            const vri = pred.vital_risk_index !== undefined ? pred.vital_risk_index : 5.0;
+            const healthScore = Math.max(30, Math.min(98, Math.round(100 - (vri - 4.5) * 6)));
+            document.getElementById("health-score-val").textContent = healthScore;
 
-            banner.className = "condition-banner glass-panel";
-            vri.textContent = pred.vital_risk_index !== undefined ? pred.vital_risk_index : "--";
-
+            // 3. Status Pill & Advice
+            const pill = document.getElementById("hero-status-pill");
+            const condTitle = document.getElementById("hero-condition-text");
+            const advice = document.getElementById("hero-advice-text");
             const cond = pred.condition || "Normal";
+
+            pill.className = "status-pill";
             if (cond === "Normal") {
-                badge.textContent = "LOW RISK (NORMAL)";
-                title.textContent = "Optimal Health Telemetry";
-                sub.textContent = "All daily biometric streams within verified physiological ranges.";
+                pill.textContent = "SAFE & HEALTHY";
+                condTitle.textContent = "Optimal Health Telemetry";
+                advice.textContent = "Your resting heart rate, sleep recovery, and activity levels are in great balance today.";
             } else if (cond === "Mild Event") {
-                banner.classList.add("mild");
-                badge.textContent = "MILD RISK (MONITOR)";
-                title.textContent = "Mild Health Event Detected";
-                sub.textContent = "Elevated heart rate or sleep deficit observed. Continuous monitoring recommended.";
+                pill.classList.add("mild");
+                pill.textContent = "MILD ATTENTION";
+                condTitle.textContent = "Mild Physiological Event";
+                advice.textContent = "Slightly elevated heart rate or minor sleep deficit recorded. Ensure adequate rest & hydration.";
             } else if (cond === "Moderate Event") {
-                banner.classList.add("moderate");
-                badge.textContent = "MODERATE RISK (ATTENTION NEEDED)";
-                title.textContent = "Moderate Vital Strain Warning";
-                sub.textContent = "Pre-hypertension or SpO2 dip detected. Consult primary physician.";
+                pill.classList.add("moderate");
+                pill.textContent = "MODERATE STRAIN";
+                condTitle.textContent = "Moderate Vital Strain Detected";
+                advice.textContent = "Noticeable vital deviation observed (blood pressure or SpO2 dip). Consider checking in with a physician.";
             } else {
-                banner.classList.add("severe");
-                badge.textContent = "HIGH RISK (CRITICAL EVENT)";
-                title.textContent = "Critical Physiological Alert";
-                sub.textContent = "Severe vitals anomaly detected! Immediate clinical attention required.";
+                pill.classList.add("severe");
+                pill.textContent = "HIGH ALERT";
+                condTitle.textContent = "Critical Physiological Alert";
+                advice.textContent = "Acute vital anomaly detected! Please seek clinical medical evaluation.";
             }
 
-            // Update Alerts
-            const alertsBox = document.getElementById("alerts-container");
-            alertsBox.innerHTML = "";
+            // 4. Clinical Warnings (if any)
+            const warnBox = document.getElementById("clinical-warnings-box");
+            warnBox.innerHTML = "";
             if (pred.anomalies && pred.anomalies.length > 0) {
-                alertsBox.style.display = "flex";
+                warnBox.style.display = "flex";
                 pred.anomalies.forEach(a => {
-                    const div = document.createElement("div");
-                    div.className = "alert-item";
-                    div.innerHTML = `<strong>⚠️ Alert:</strong> ${a}`;
-                    alertsBox.appendChild(div);
+                    const span = document.createElement("span");
+                    span.className = "warn-item";
+                    span.textContent = `⚠️ ${a}`;
+                    warnBox.appendChild(span);
                 });
             } else {
-                alertsBox.style.display = "none";
+                warnBox.style.display = "none";
             }
 
-            // Render Charts
+            // 5. Render Clean Graphs
+            renderRiskProbChart(pred.probabilities || {});
             renderTimelineChart(data.timeline || []);
-            renderRiskChart(pred.probabilities || {});
 
         } catch (err) {
-            console.error("Patient data load failed", err);
+            console.error("Vitals load failed", err);
         }
     }
 
-    // Chart 1: Telemetry Timeline
+    // Graph 1: Disease Risk Probability Breakdown
+    function renderRiskProbChart(probs) {
+        const ctx = document.getElementById("riskProbChart").getContext("2d");
+        const labels = ["Normal", "Mild", "Moderate", "Severe"];
+        const dataVals = [
+            Math.round((probs["Normal"] || 0) * 100),
+            Math.round((probs["Mild Event"] || 0) * 100),
+            Math.round((probs["Moderate Event"] || 0) * 100),
+            Math.round((probs["Severe Event"] || 0) * 100)
+        ];
+
+        if (riskProbChart) riskProbChart.destroy();
+
+        riskProbChart = new Chart(ctx, {
+            type: "bar",
+            data: {
+                labels: labels,
+                datasets: [{
+                    data: dataVals,
+                    backgroundColor: [
+                        "#10b981", // Normal
+                        "#3b82f6", // Mild
+                        "#f59e0b", // Moderate
+                        "#ef4444"  // Severe
+                    ],
+                    borderRadius: 8,
+                    barThickness: 36
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: (ctx) => ` Probability: ${ctx.raw}%`
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: { display: false },
+                        ticks: { color: "#94a3b8", font: { family: 'Inter', size: 12, weight: '500' } }
+                    },
+                    y: {
+                        max: 100,
+                        grid: { color: "rgba(255, 255, 255, 0.05)" },
+                        ticks: { color: "#64748b", callback: v => `${v}%` }
+                    }
+                }
+            }
+        });
+    }
+
+    // Graph 2: 14-Day Vitals Trend
     function renderTimelineChart(timeline) {
         const ctx = document.getElementById("timelineChart").getContext("2d");
-        const labels = timeline.map((_, idx) => `Day ${idx + 1}`);
+        const labels = timeline.map((_, i) => `D${i + 1}`);
         const hrData = timeline.map(t => t.heart_rate);
-        const stepsData = timeline.map(t => t.steps / 100); // scaled for visual harmony
+        const stepsData = timeline.map(t => t.steps);
 
         if (timelineChart) timelineChart.destroy();
 
@@ -178,20 +217,22 @@ document.addEventListener("DOMContentLoaded", () => {
                     {
                         label: "Heart Rate (BPM)",
                         data: hrData,
-                        borderColor: "#f43f5e",
-                        backgroundColor: "rgba(244, 63, 94, 0.1)",
+                        borderColor: "#ef4444",
+                        backgroundColor: "rgba(239, 68, 68, 0.08)",
                         tension: 0.35,
                         fill: true,
-                        yAxisID: "y"
+                        yAxisID: "y-hr",
+                        pointRadius: 2
                     },
                     {
-                        label: "Steps (x100)",
+                        label: "Steps",
                         data: stepsData,
-                        borderColor: "#06b6d4",
+                        borderColor: "#3b82f6",
                         backgroundColor: "transparent",
-                        borderDash: [5, 5],
+                        borderDash: [4, 4],
                         tension: 0.3,
-                        yAxisID: "y"
+                        yAxisID: "y-steps",
+                        pointRadius: 0
                     }
                 ]
             },
@@ -199,99 +240,69 @@ document.addEventListener("DOMContentLoaded", () => {
                 responsive: true,
                 maintainAspectRatio: false,
                 plugins: {
-                    legend: { labels: { color: "#94a3b8", font: { family: 'Inter', size: 11 } } }
+                    legend: {
+                        labels: { color: "#94a3b8", font: { family: 'Inter', size: 11 } }
+                    }
                 },
                 scales: {
-                    x: { grid: { color: "rgba(255,255,255,0.04)" }, ticks: { color: "#64748b" } },
-                    y: { grid: { color: "rgba(255,255,255,0.04)" }, ticks: { color: "#64748b" } }
+                    x: {
+                        grid: { color: "rgba(255,255,255,0.03)" },
+                        ticks: { color: "#64748b" }
+                    },
+                    "y-hr": {
+                        type: "linear",
+                        position: "left",
+                        grid: { color: "rgba(255,255,255,0.04)" },
+                        ticks: { color: "#ef4444" }
+                    },
+                    "y-steps": {
+                        type: "linear",
+                        position: "right",
+                        grid: { display: false },
+                        ticks: { color: "#3b82f6" }
+                    }
                 }
             }
         });
     }
 
-    // Chart 2: Disease Probability Bar
-    function renderRiskChart(probs) {
-        const ctx = document.getElementById("riskProbChart").getContext("2d");
-        const labels = ["Normal", "Mild", "Moderate", "Severe"];
-        const data = [
-            (probs["Normal"] || 0) * 100,
-            (probs["Mild Event"] || 0) * 100,
-            (probs["Moderate Event"] || 0) * 100,
-            (probs["Severe Event"] || 0) * 100
-        ];
-
-        if (riskProbChart) riskProbChart.destroy();
-
-        riskProbChart = new Chart(ctx, {
-            type: "bar",
-            data: {
-                labels: labels,
-                datasets: [{
-                    label: "Probability (%)",
-                    data: data,
-                    backgroundColor: [
-                        "rgba(16, 185, 129, 0.7)",
-                        "rgba(6, 182, 212, 0.7)",
-                        "rgba(245, 158, 11, 0.7)",
-                        "rgba(244, 63, 94, 0.7)"
-                    ],
-                    borderRadius: 6
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: { legend: { display: false } },
-                scales: {
-                    x: { grid: { display: false }, ticks: { color: "#94a3b8" } },
-                    y: { max: 100, grid: { color: "rgba(255,255,255,0.04)" }, ticks: { color: "#64748b" } }
-                }
-            }
-        });
-    }
-
-    // Event: User Select Change
+    // Switch User Event
     userSelect.addEventListener("change", () => {
-        loadPatientData(userSelect.value);
+        loadPatientVitals(userSelect.value);
     });
 
-    // Event: Sync Google Fit
+    // Refresh / Sync Google Fit Data
     refreshFitBtn.addEventListener("click", async () => {
         const u = userSelect.value;
         refreshFitBtn.disabled = true;
         refreshFitBtn.textContent = "Syncing...";
-        logClient(`[SYNC] Querying Google Fitness REST API for user '${u}'...`, "cyan");
 
         try {
             const res = await fetch(`/api/user/${u}/fetch`, { method: "POST" });
             const data = await res.json();
             if (data.status === "success") {
-                logClient(`[SUCCESS] ${data.message}`, "success");
-                await loadPatientData(u);
+                showToast("Google Fit Synced!", `Retrieved 30 days of real telemetry records for ${u}.`);
+                await loadPatientVitals(u);
             } else {
-                logClient(`[ERROR] ${data.message}`, "warning");
+                alert(`Sync Notice: ${data.message}`);
             }
         } catch (err) {
-            logClient(`[ERROR] Failed to connect: ${err}`, "warning");
+            alert(`Sync Error: ${err}`);
         } finally {
             refreshFitBtn.disabled = false;
             refreshFitBtn.innerHTML = `
                 <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
                 </svg>
-                <span>Sync Google Fit Data</span>`;
+                <span>Sync Now</span>`;
         }
     });
 
-    // Event: Train On-Device & Send DP Weights
+    // Save & Protect Privately (On-device Local DP Training)
     trainOnDeviceBtn.addEventListener("click", async () => {
         const u = userSelect.value;
         trainOnDeviceBtn.disabled = true;
-        trainOnDeviceBtn.textContent = "Training Local Model...";
-
-        logClient(`\n------------------------------------------------------------`, "info");
-        logClient(`[STEP 1] Starting on-device local SGD training for '${u}'...`, "cyan");
-        logClient(`[STEP 2] Standardizing features with zero-leakage scalars...`, "info");
+        trainOnDeviceBtn.textContent = "Protecting & Syncing...";
 
         try {
             const res = await fetch(`/api/user/${u}/train`, {
@@ -300,152 +311,34 @@ document.addEventListener("DOMContentLoaded", () => {
                 body: JSON.stringify({ epsilon: 1.0, epochs: 30 })
             });
             const data = await res.json();
-
             if (data.status === "success") {
-                const dp = data.differential_privacy;
-                logClient(`[STEP 3] Local SGD model trained on ${data.trained_samples} samples.`, "success");
-                logClient(`[PRIVACY] Injecting Laplace Noise with privacy budget epsilon=${dp.epsilon}`, "cyan");
-                logClient(`[PRIVACY] Sensitivity Clipping: R_clip=${dp.sensitivity_clip}`, "info");
-                logClient(`[PRIVACY] Noisy Weights L2-Norm: ${dp.noisy_weights_l2_norm}`, "info");
-                logClient(`[VERIFIED] Raw patient data leaked: ${dp.raw_patient_data_leaked ? 'YES' : 'NO (100% Secure)'}`, "success");
-                logClient(`[STEP 4] Noisy DP weights submitted to Central Server!`, "success");
+                showToast(
+                    "Data Protected & Synchronized!",
+                    "Trained locally on your device with Differential Privacy (Laplace noise). Only private weights were sent to the central server. Raw health data never left your device."
+                );
             } else {
-                logClient(`[ERROR] ${data.message}`, "warning");
+                alert(`Error: ${data.message}`);
             }
         } catch (err) {
-            logClient(`[ERROR] ${err}`, "warning");
+            alert(`Connection Error: ${err}`);
         } finally {
             trainOnDeviceBtn.disabled = false;
             trainOnDeviceBtn.innerHTML = `
                 <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
-                    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
                 </svg>
-                <span>Train & Push DP Weights</span>`;
+                <span>Save & Protect Privately</span>`;
         }
     });
 
-    // Event: Trigger Federated Round (Server Tab)
-    triggerFedAvgBtn.addEventListener("click", async () => {
-        triggerFedAvgBtn.disabled = true;
-        triggerFedAvgBtn.textContent = "Executing FedAvg...";
-
-        logServer(`\n============================================================`, "info");
-        logServer(`[FEDAVG] Initiating 5 Communication Rounds across connected client nodes...`, "cyan");
-
-        try {
-            const res = await fetch("/api/server/aggregate", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ rounds: 5, epsilon: 1.0, use_dp: true })
-            });
-            const data = await res.json();
-
-            if (data.status === "success") {
-                logServer(`[CONVERGENCE] ${data.message}`, "success");
-                logServer(`[PRIVACY] Single-release Laplace DP active with epsilon=${data.epsilon}`, "cyan");
-                logServer(`[UPDATE] Global model weights updated and broadcasted.`, "success");
-                await loadSystemStatus();
-            } else {
-                logServer(`[ERROR] ${data.message}`, "warning");
-            }
-        } catch (err) {
-            logServer(`[ERROR] ${err}`, "warning");
-        } finally {
-            triggerFedAvgBtn.disabled = false;
-            triggerFedAvgBtn.innerHTML = `
-                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
-                </svg>
-                <span>Trigger Federated Round (FedAvg)</span>`;
+    // Add New User / Connect Google Fit
+    connectNewBtn.addEventListener("click", () => {
+        const newUserName = prompt("Enter new user ID (e.g. user3, dad, mom):", "user3");
+        if (newUserName) {
+            alert(`To connect '${newUserName}', run: \n\npython main_pipeline.py --auth ${newUserName}\n\nin terminal to link their Google account.`);
         }
     });
-
-    // Simulator Sliders & Logic
-    const simHr = document.getElementById("sim-hr");
-    const simBpSys = document.getElementById("sim-bp-sys");
-    const simBpDia = document.getElementById("sim-bp-dia");
-    const simSpo2 = document.getElementById("sim-spo2");
-    const simSleep = document.getElementById("sim-sleep");
-    const simPredictBtn = document.getElementById("sim-predict-btn");
-
-    function updateSliderLabels() {
-        document.getElementById("sim-hr-val").textContent = `${simHr.value} BPM`;
-        document.getElementById("sim-bp-sys-val").textContent = `${simBpSys.value} mmHg`;
-        document.getElementById("sim-bp-dia-val").textContent = `${simBpDia.value} mmHg`;
-        document.getElementById("sim-spo2-val").textContent = `${simSpo2.value} %`;
-        document.getElementById("sim-sleep-val").textContent = `${simSleep.value} hrs`;
-    }
-
-    [simHr, simBpSys, simBpDia, simSpo2, simSleep].forEach(el => {
-        el.addEventListener("input", updateSliderLabels);
-    });
-
-    async function runSimulatorPrediction() {
-        const vitals = {
-            heart_rate: parseFloat(simHr.value),
-            blood_pressure_systolic: parseFloat(simBpSys.value),
-            blood_pressure_diastolic: parseFloat(simBpDia.value),
-            blood_oxygen: parseFloat(simSpo2.value),
-            sleep_quality: parseFloat(simSleep.value)
-        };
-
-        try {
-            const res = await fetch("/api/predict", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(vitals)
-            });
-            const data = await res.json();
-            const pred = data.prediction;
-
-            const badge = document.getElementById("sim-result-badge");
-            badge.textContent = `${pred.condition.toUpperCase()} (${pred.badge})`;
-
-            document.getElementById("sim-vri").textContent = pred.vital_risk_index;
-            const maxProb = Math.max(...Object.values(pred.probabilities));
-            document.getElementById("sim-conf").textContent = `${Math.round(maxProb * 100)}%`;
-
-            // Alerts
-            const alertsBox = document.getElementById("sim-alerts-box");
-            alertsBox.innerHTML = "";
-            if (pred.anomalies && pred.anomalies.length > 0) {
-                pred.anomalies.forEach(a => {
-                    const p = document.createElement("p");
-                    p.style.color = "#fda4af";
-                    p.style.marginBottom = "4px";
-                    p.textContent = `⚠️ ${a}`;
-                    alertsBox.appendChild(p);
-                });
-            } else {
-                alertsBox.innerHTML = `<p class="sim-safe-note">✓ All vitals within safe physiological thresholds.</p>`;
-            }
-
-            // Probability bars
-            const probsContainer = document.getElementById("sim-probs-container");
-            probsContainer.innerHTML = "";
-            for (const [cname, p] of Object.entries(pred.probabilities)) {
-                const pct = Math.round(p * 100);
-                const row = document.createElement("div");
-                row.className = "sim-prob-row";
-                row.innerHTML = `
-                    <div class="sim-prob-label">
-                        <span>${cname}</span>
-                        <span>${pct}%</span>
-                    </div>
-                    <div class="sim-prob-bar">
-                        <div class="sim-prob-fill" style="width: ${pct}%"></div>
-                    </div>`;
-                probsContainer.appendChild(row);
-            }
-        } catch (err) {
-            console.error("Simulator prediction failed", err);
-        }
-    }
-
-    simPredictBtn.addEventListener("click", runSimulatorPrediction);
 
     // Initial Load
-    loadSystemStatus();
-    loadUserList();
-    runSimulatorPrediction();
+    loadUserDropdown();
 });
