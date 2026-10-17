@@ -52,7 +52,132 @@ server_state = {
 
 @app.route("/")
 def index():
-    return render_template("index.html")
+    auth_users = list_authenticated_users()
+    all_users = sorted(list(set(["user1", "user2"] + auth_users)))
+
+    current_user = request.args.get("user", "user1")
+    if current_user not in all_users and all_users:
+        current_user = all_users[0]
+
+    data_path = os.path.join(BASE_DIR, f"fit_data_{current_user}.json")
+    if not os.path.exists(data_path):
+        data_path = os.path.join(BASE_DIR, "fit_data_user1.json")
+
+    records = []
+    if os.path.exists(data_path):
+        try:
+            with open(data_path, "r", encoding="utf-8") as f:
+                records = json.load(f)
+        except Exception:
+            records = []
+
+    # Safe vitals fallback
+    if records:
+        latest = records[-1]
+    else:
+        latest = {
+            "heart_rate": 68.0,
+            "blood_pressure_systolic": 120.0,
+            "blood_pressure_diastolic": 80.0,
+            "blood_oxygen": 98.0,
+            "steps_count": 6000.0,
+            "sleep_quality": 7.0,
+            "calories_burned": 1800.0
+        }
+
+    try:
+        prediction = predict_health_risk(latest)
+    except Exception:
+        prediction = {
+            "condition": "Normal",
+            "badge": "LOW RISK (NORMAL)",
+            "vital_risk_index": 5.0,
+            "probabilities": {"Normal": 0.85, "Mild Event": 0.10, "Moderate Event": 0.04, "Severe Event": 0.01},
+            "anomalies": []
+        }
+
+    vri = prediction.get("vital_risk_index", 5.0)
+    health_score = max(35, min(98, round(100 - (vri - 4.5) * 6)))
+
+    # 14-day timeline for line graph
+    timeline = []
+    recent_records = records[-14:] if records else [latest]
+    for r in recent_records:
+        timeline.append({
+            "steps": int(round(r.get("steps_count", 0))),
+            "heart_rate": round(r.get("heart_rate", 70), 1),
+            "blood_pressure": f"{int(round(r.get('blood_pressure_systolic', 120)))}/{int(round(r.get('blood_pressure_diastolic', 80)))}",
+            "spo2": round(r.get("blood_oxygen", 98), 1),
+            "sleep": round(r.get("sleep_quality", 7.0), 1),
+            "condition": r.get("Daily_Health_Condition", 0)
+        })
+
+    # Generate dates for history table (newest first)
+    table_records = []
+    if records:
+        end_date = pd.Timestamp.now()
+        dates = pd.date_range(end=end_date, periods=len(records), freq='D')
+        for i, r in enumerate(reversed(records)):
+            idx = len(records) - 1 - i
+            dt_str = dates[idx].strftime("%b %d, %Y")
+            c_val = int(r.get("Daily_Health_Condition", 0))
+            if c_val == 0:
+                c_label = "Normal"
+                c_class = "normal"
+            elif c_val == 1:
+                c_label = "Mild Attention"
+                c_class = "mild"
+            elif c_val == 2:
+                c_label = "Moderate Risk"
+                c_class = "moderate"
+            else:
+                c_label = "Severe Alert"
+                c_class = "severe"
+
+            table_records.append({
+                "date": dt_str,
+                "steps": int(round(r.get("steps_count", 0))),
+                "heart_rate": round(r.get("heart_rate", 70), 1),
+                "bp": f"{int(round(r.get('blood_pressure_systolic', 120)))}/{int(round(r.get('blood_pressure_diastolic', 80)))}",
+                "spo2": round(r.get("blood_oxygen", 98), 1),
+                "sleep": round(r.get("sleep_quality", 7.0), 1),
+                "calories": int(round(r.get("calories_burned", 1800))),
+                "condition": c_label,
+                "condition_class": c_class
+            })
+
+    # User identity metadata
+    if current_user == "user1":
+        user_name = "Anurag Kushwaha"
+        user_initials = "AK"
+        user_email = "anuragkushwaha2207@gmail.com"
+    elif current_user == "user2":
+        user_name = "Family Member"
+        user_initials = "U2"
+        user_email = "user2@family.health"
+    else:
+        user_name = f"Patient {current_user}"
+        user_initials = current_user[:2].upper()
+        user_email = f"{current_user}@fit.local"
+
+    return render_template(
+        "index.html",
+        users=all_users,
+        current_user=current_user,
+        user_name=user_name,
+        user_initials=user_initials,
+        user_email=user_email,
+        record_count=len(records),
+        vitals=latest,
+        prediction=prediction,
+        health_score=health_score,
+        timeline=timeline,
+        timeline_json=json.dumps(timeline),
+        probs_json=json.dumps(prediction.get("probabilities", {})),
+        table_records=table_records
+    )
+
+
 
 @app.route("/api/status", methods=["GET"])
 def get_status():

@@ -634,3 +634,58 @@ body {
     background: #ffffff;
     margin-top: auto;
 }
+
+/* Telemetry History Table */
+.table-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-card);
+    border-radius: var(--radius-md);
+    padding: 24px;
+    box-shadow: var(--shadow-card);
+    margin-bottom: 24px;
+}
+.table-responsive {
+    width: 100%;
+    overflow-x: auto;
+    margin-top: 16px;
+}
+.health-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+    text-align: left;
+}
+.health-table th {
+    background: #f8fafc;
+    color: var(--text-muted);
+    font-weight: 600;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border-card);
+}
+.health-table td {
+    padding: 12px 16px;
+    border-bottom: 1px solid #f1f5f9;
+    color: var(--text-body);
+}
+.health-table tr:hover td {
+    background: #f8fafc;
+}
+.health-table tr:last-child td {
+    border-bottom: none;
+}
+.badge-status {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 8px;
+    border-radius: 9999px;
+    font-size: 0.72rem;
+    font-weight: 600;
+}
+.badge-status.normal { background: #ecfdf5; color: #059669; }
+.badge-status.mild { background: #eff6ff; color: #2563eb; }
+.badge-status.moderate { background: #fffbeb; color: #d97706; }
+.badge-status.severe { background: #fef2f2; color: #dc2626; }
+
