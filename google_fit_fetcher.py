@@ -14,16 +14,19 @@ import numpy as np
 from googleapiclient.discovery import build
 from google_fit_auth import authenticate_user
 
-# Data Types to Aggregate
-AGGREGATE_METRICS = [
+# Core Google Fit Consumer Metrics (guaranteed by standard activity & body scopes)
+CORE_METRICS = [
     {"dataTypeName": "com.google.step_count.delta"},
     {"dataTypeName": "com.google.heart_rate.bpm"},
     {"dataTypeName": "com.google.calories.expended"},
     {"dataTypeName": "com.google.active_minutes"},
+]
+
+# Optional Clinical Metrics (queried if available, otherwise safely imputed)
+OPTIONAL_METRICS = [
     {"dataTypeName": "com.google.oxygen_saturation"},
     {"dataTypeName": "com.google.blood_pressure"},
     {"dataTypeName": "com.google.blood_glucose"},
-    {"dataTypeName": "com.google.body.temperature"},
 ]
 
 def fetch_user_fit_data(user_id: str = "user1", days: int = 30) -> pd.DataFrame:
@@ -42,15 +45,21 @@ def fetch_user_fit_data(user_id: str = "user1", days: int = 30) -> pd.DataFrame:
     start_time_ms = int(start_midnight.timestamp() * 1000)
     end_time_ms = int(now.timestamp() * 1000)
 
+    # 1. Fetch core metrics (steps, heart rate, calories, active minutes)
     request_body = {
-        "aggregateBy": AGGREGATE_METRICS,
+        "aggregateBy": CORE_METRICS,
         "bucketByTime": {"durationMillis": 86400000},  # 24 hours in ms
         "startTimeMillis": start_time_ms,
         "endTimeMillis": end_time_ms,
     }
 
     print(f"[FIT FETCHER] Requesting past {days} days of telemetry for '{user_id}'...")
-    response = service.users().dataset().aggregate(userId="me", body=request_body).execute()
+    try:
+        response = service.users().dataset().aggregate(userId="me", body=request_body).execute()
+    except Exception as e:
+        print(f"[FIT FETCHER] Core metrics fetch warning: {e}")
+        response = {"bucket": []}
+
 
     buckets = response.get("bucket", [])
     records = []
@@ -123,6 +132,7 @@ def fetch_user_fit_data(user_id: str = "user1", days: int = 30) -> pd.DataFrame:
     # Fetch Sleep Sessions via sessions API
     try:
         sleep_response = service.users().sessions().list(
+            userId="me",
             startTime=(start_midnight.isoformat()),
             endTime=now.isoformat(),
             activityType=72  # Activity type 72 is Sleep in Google Fit
