@@ -8,3 +8,12 @@ venv/
 .venv/
 env.bak/
 venv.bak/
+
+# OAuth Credentials & User Tokens (Privacy & Security)
+client_secret*.json
+credentials.json
+tokens/
+*_token.json
+fit_data_*.json
+google_fit_global_model.pkl
+

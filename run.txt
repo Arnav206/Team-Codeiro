@@ -28,3 +28,20 @@ python server.py -e 0.5 --dp-clients 1,2         -> 97.27% (Avg Personalized: 97
 python machine1.py -e 0.5                        -> 97.60%  ----------------- Machine-1 (DP 0.5)                           
 python machine2.py -e 0.5                        -> 95.87%  ----------------- Machine-2 (DP 0.5)
 python machine3.py -e 0.5                        -> 98.03%  ----------------- Machine-3 (DP 0.5)
+
+
+*********************GOOGLE FIT FEDERATED LEARNING PIPELINE***********************
+1. Authenticate Google Fit user:
+   python main_pipeline.py --auth user1
+
+2. Fetch real telemetry (30 days):
+   python main_pipeline.py --fetch user1 --days 30
+
+3. Train Federated Learning with Differential Privacy:
+   python federated_fit_server.py -e 1.0 --rounds 5
+
+4. Predict patient health risk & clinical alerts:
+   python predict_fit_user.py --hr 75 --spo2 98 --bp-sys 120 --bp-dia 80 --sleep 8.0 --patient "Arnav"
+
+5. Full end-to-end multi-client demonstration:
+   python main_pipeline.py --demo
