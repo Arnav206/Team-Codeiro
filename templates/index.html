@@ -140,6 +140,54 @@
                 </div>
             </div>
 
+            <!-- 2.5 24-Hour Predictive Health Forecast & Explainable AI (XAI) -->
+            <div class="section-header">
+                <div>
+                    <h2>🔮 24-Hour Predictive Health Forecast & Explainable AI (XAI)</h2>
+                    <p>Clinical early warning system forecasting future acute vulnerabilities over the next 24 to 48 hours with transparent biomarker reasoning</p>
+                </div>
+            </div>
+
+            <div class="forecast-grid">
+                {% for d in future_diseases %}
+                <div class="forecast-card">
+                    <div class="forecast-card-header">
+                        <div>
+                            <h3 class="forecast-title">{{ d.disease_name }}</h3>
+                            <div class="forecast-hindi">{{ d.disease_hindi }}</div>
+                        </div>
+                        <span class="forecast-badge {{ d.severity_color }}">{{ d.timeframe }} &bull; {{ d.risk_level }}</span>
+                    </div>
+
+                    <div class="forecast-prob-bar-container">
+                        <div class="prob-label-row">
+                            <span style="color: var(--text-muted); font-size: 0.75rem;">Predicted 24h Vulnerability</span>
+                            <span style="color: var(--text-heading); font-weight: 700;">{{ d.risk_probability }}%</span>
+                        </div>
+                        <div class="prob-track">
+                            <div class="prob-fill {{ d.severity_color }}" style="width: {{ d.risk_probability }}%;"></div>
+                        </div>
+                    </div>
+
+                    <div class="xai-reason-box">
+                        <strong>🧠 Explainable AI (XAI) Clinical Reason:</strong>
+                        <p>{{ d.xai_reason }}</p>
+                    </div>
+
+                    <div class="biomarker-pills-row">
+                        {% for b in d.biomarkers_affected %}
+                        <span class="bio-pill">📊 {{ b }}</span>
+                        {% endfor %}
+                    </div>
+
+                    <div class="action-guideline-box">
+                        <strong>💡 24-Hour Clinical Action Plan:</strong>
+                        <span> {{ d.prevention_guidelines }}</span>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
             <!-- 3. Health Prediction Graphs -->
             <div class="section-header">
                 <div>
@@ -176,7 +224,28 @@
                         <canvas id="timelineChart"></canvas>
                     </div>
                 </div>
+
+                <!-- Graph 3: Explainable AI (XAI) Feature Attribution Breakdown -->
+                <div class="graph-card full-width">
+                    <div class="graph-card-header">
+                        <div>
+                            <h3>Explainable AI (XAI) Biomarker Feature Contribution</h3>
+                            <p style="font-size: 0.76rem; color: var(--text-muted); margin-top: 3px;">
+                                Exact linear Shapley attribution weights (&phi;) showing which biomarkers drove the risk prediction vs protected the patient.
+                            </p>
+                        </div>
+                        <span class="tag-gray">SHAP Attribution</span>
+                    </div>
+                    <div class="chart-box" style="height: 240px;">
+                        <canvas id="xaiChart"></canvas>
+                    </div>
+                    <div class="graph-legend-strip">
+                        <div class="legend-item"><span class="legend-dot dot-red"></span>Risk Driver (+) &bull; Accelerates physiological strain</div>
+                        <div class="legend-item"><span class="legend-dot dot-green"></span>Protective Factor (-) &bull; Physiological buffer reducing risk</div>
+                    </div>
+                </div>
             </div>
+
 
             <!-- 4. Today's Vitals (Synced from Google Fit) -->
             <div class="section-header">
@@ -338,6 +407,7 @@
     <script>
         const INITIAL_TIMELINE = {{ timeline_json | safe }};
         const INITIAL_PROBS = {{ probs_json | safe }};
+        const INITIAL_XAI = {{ xai_json | safe }};
 
         document.addEventListener("DOMContentLoaded", () => {
             const userSelect = document.getElementById("user-select");
@@ -349,6 +419,8 @@
 
             let timelineChart = null;
             let riskProbChart = null;
+            let xaiChart = null;
+
 
             if (toastCloseBtn) {
                 toastCloseBtn.addEventListener("click", () => {
@@ -463,9 +535,69 @@
                 });
             }
 
+            function renderXaiChart(xai) {
+                const canvas = document.getElementById("xaiChart");
+                if (!canvas || !xai || !xai.chart_labels) return;
+                const ctx = canvas.getContext("2d");
+
+                if (xaiChart) xaiChart.destroy();
+
+                xaiChart = new Chart(ctx, {
+                    type: "bar",
+                    data: {
+                        labels: xai.chart_labels,
+                        datasets: [{
+                            data: xai.chart_values,
+                            backgroundColor: xai.chart_colors,
+                            borderRadius: 4,
+                            barThickness: 18
+                        }]
+                    },
+                    options: {
+                        indexAxis: "y",
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                backgroundColor: "#1e293b",
+                                titleColor: "#ffffff",
+                                bodyColor: "#f1f5f9",
+                                callbacks: {
+                                    label: (ctx) => {
+                                        const v = ctx.raw;
+                                        return v >= 0
+                                            ? ` Risk Driver: +${v}% risk contribution`
+                                            : ` Protective Factor: ${v}% risk buffer`;
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            x: {
+                                grid: { color: "#f1f5f9" },
+                                ticks: {
+                                    color: "#64748b",
+                                    callback: v => `${v > 0 ? '+' : ''}${v}%`
+                                }
+                            },
+                            y: {
+                                grid: { display: false },
+                                ticks: {
+                                    color: "#334155",
+                                    font: { family: 'Inter', size: 11, weight: '600' }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
             // Immediately render charts
             renderRiskProbChart(INITIAL_PROBS);
             renderTimelineChart(INITIAL_TIMELINE);
+            renderXaiChart(INITIAL_XAI);
+
 
             // User dropdown change
             userSelect.addEventListener("change", () => {
@@ -479,7 +611,11 @@
                 refreshFitBtn.textContent = "Syncing...";
 
                 try {
-                    const res = await fetch(`/api/user/${u}/fetch`, { method: "POST" });
+                    const res = await fetch(`/api/user/${u}/fetch`, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ days: 30 })
+                    });
                     const data = await res.json();
                     if (data.status === "success") {
                         showToast("Google Fit Synced!", `Retrieved ${data.record_count} telemetry records for ${u}.`);
@@ -488,6 +624,7 @@
                         alert(`Notice: ${data.message}`);
                     }
                 } catch (err) {
+
                     alert(`Error: ${err}`);
                 } finally {
                     refreshFitBtn.disabled = false;

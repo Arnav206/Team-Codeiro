@@ -469,6 +469,11 @@ body {
     flex-direction: column;
 }
 
+.graph-card.full-width {
+    grid-column: 1 / -1;
+}
+
+
 .graph-card-header {
     display: flex;
     justify-content: space-between;
@@ -688,4 +693,130 @@ body {
 .badge-status.mild { background: #eff6ff; color: #2563eb; }
 .badge-status.moderate { background: #fffbeb; color: #d97706; }
 .badge-status.severe { background: #fef2f2; color: #dc2626; }
+
+/* 24-Hour Predictive Health Forecast & Explainable AI (XAI) */
+.forecast-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 18px;
+    margin-bottom: 28px;
+}
+@media (max-width: 860px) {
+    .forecast-grid { grid-template-columns: 1fr; }
+}
+
+.forecast-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-card);
+    border-radius: var(--radius-md);
+    padding: 20px;
+    box-shadow: var(--shadow-card);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.forecast-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-card-hover);
+}
+
+.forecast-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 10px;
+}
+.forecast-title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--text-heading);
+    line-height: 1.3;
+}
+.forecast-hindi {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    font-weight: 500;
+    margin-top: 2px;
+}
+.forecast-badge {
+    padding: 4px 10px;
+    border-radius: 9999px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    white-space: nowrap;
+}
+.forecast-badge.danger { background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; }
+.forecast-badge.warning { background: #fffbeb; color: #d97706; border: 1px solid #fde68a; }
+.forecast-badge.success { background: #ecfdf5; color: #059669; border: 1px solid #a7f3d0; }
+
+.forecast-prob-bar-container {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+.prob-label-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.76rem;
+    font-weight: 600;
+}
+.prob-track {
+    width: 100%;
+    height: 7px;
+    background: #f1f5f9;
+    border-radius: 9999px;
+    overflow: hidden;
+}
+.prob-fill {
+    height: 100%;
+    border-radius: 9999px;
+}
+.prob-fill.danger { background: #ef4444; }
+.prob-fill.warning { background: #f59e0b; }
+.prob-fill.success { background: #10b981; }
+
+.xai-reason-box {
+    background: #f8fafc;
+    border-left: 3px solid var(--primary);
+    padding: 10px 12px;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    color: var(--text-body);
+    line-height: 1.45;
+}
+.xai-reason-box strong {
+    color: var(--text-heading);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 4px;
+    font-size: 0.78rem;
+}
+
+.biomarker-pills-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+.bio-pill {
+    background: #eff6ff;
+    color: #1e40af;
+    font-size: 0.72rem;
+    font-weight: 600;
+    padding: 3px 8px;
+    border-radius: 6px;
+    border: 1px solid #dbeafe;
+}
+
+.action-guideline-box {
+    background: #f0fdf4;
+    border: 1px dashed #86efac;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 0.78rem;
+    color: #166534;
+    line-height: 1.4;
+}
+
 

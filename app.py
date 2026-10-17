@@ -174,8 +174,12 @@ def index():
         timeline=timeline,
         timeline_json=json.dumps(timeline),
         probs_json=json.dumps(prediction.get("probabilities", {})),
+        future_diseases=prediction.get("future_diseases_24h", []),
+        xai=prediction.get("xai", {}),
+        xai_json=json.dumps(prediction.get("xai", {})),
         table_records=table_records
     )
+
 
 
 
@@ -275,7 +279,8 @@ def get_user_data(user_id):
 @app.route("/api/user/<user_id>/fetch", methods=["POST"])
 def fetch_user_data(user_id):
     try:
-        days = request.json.get("days", 30) if request.json else 30
+        data = request.get_json(silent=True) or {}
+        days = int(data.get("days", 30))
         raw_df = fetch_user_fit_data(user_id=user_id, days=days)
         processed_df = process_fit_pipeline(raw_df)
         save_path = os.path.join(BASE_DIR, f"fit_data_{user_id}.json")
@@ -287,6 +292,7 @@ def fetch_user_data(user_id):
         })
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
+
 
 @app.route("/api/user/<user_id>/train", methods=["POST"])
 def train_client_node(user_id):
