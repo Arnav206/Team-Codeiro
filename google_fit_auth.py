@@ -81,8 +81,17 @@ def authenticate_user(user_id: str = "user1", port: int = 8080) -> Credentials:
         )
         flow.redirect_uri = f"http://localhost:{port}/"
 
+        # Ensure port 8080 is free
         try:
-            # Runs local web server on port 8080 and opens system browser
+            import socket
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+                s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        except Exception:
+            pass
+
+        flow.redirect_uri = f"http://localhost:{port}/"
+
+        try:
             creds = flow.run_local_server(
                 port=port,
                 prompt="consent",
@@ -90,7 +99,8 @@ def authenticate_user(user_id: str = "user1", port: int = 8080) -> Credentials:
                 success_message="Authentication successful! You can close this tab and return to the terminal."
             )
         except Exception as e:
-            print(f"[AUTH ERROR] Failed to run local server on port {port}: {e}")
+            print(f"\n[AUTH ERROR] OAuth flow failed: {e}")
+            print(f"Make sure 'http://localhost:{port}/' is added to Authorized redirect URIs in Google Cloud Console.")
             raise
 
         # Save credentials for future seamless runs
