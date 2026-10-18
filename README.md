@@ -2,6 +2,7 @@
 ### *Federated Edge Machine Learning, Laplace Differential Privacy ($\epsilon=1.0$), and Explainable AI for Proactive Clinical Early Warning*
 
 [![Python](https://img.shields.io/badge/Python-3.10%2B-blue.svg?style=flat-square&logo=python)](https://python.org)
+[![IEEE Publication](https://img.shields.io/badge/IEEE%20MPCON%202026-Published%20Paper-00629B.svg?style=flat-square&logo=ieee)](https://doi.org/10.1109/MPCON69668.2026.11508248)
 [![Federated Learning](https://img.shields.io/badge/Architecture-Federated%20FedAvg-9333ea.svg?style=flat-square)](https://federated.withgoogle.com/)
 [![Differential Privacy](https://img.shields.io/badge/Privacy-Laplace%20DP%20(%CE%B5=1.0)-10b981.svg?style=flat-square)](https://en.wikipedia.org/wiki/Differential_privacy)
 [![Clinical Accuracy](https://img.shields.io/badge/Model%20Accuracy-97.27%25%20(ROC--AUC%200.996)-f59e0b.svg?style=flat-square)](#empirical-benchmarks--evaluation-results)
@@ -327,7 +328,23 @@ Team-Codeiro/
 | **Network Communication** | Transmits raw sensor streams | **Transmits only noisy, clipped model parameter updates** |
 | **Diagnostic Accuracy** | 80% - 90% with standard models | **97.27% accuracy with 0.9959 ROC-AUC** |
 | **Model Explainability** | Black-box uninterpretable scores | **Real-time Tree SHAP clinical feature attributions** |
-| **Edge Adaptability** | One-size-fits-all generic models | **Personalized edge fine-tuning loop per user physiology** |
+---
+
+## 📚 Academic Publications & Research Roadmap
+
+Our architectural and theoretical contributions are structured into a rigorous multi-phase academic research roadmap:
+
+### 1. 📜 Peer-Reviewed Published Paper (Differential Privacy)
+- **Paper Title:** *Differential Privacy for Medical Data Analysis*
+- **Conference:** **2026 IEEE Madhya Pradesh Section Conference (MPCON)**
+- **Publication Identifier:** **DOI: [10.1109/MPCON69668.2026.11508248](https://doi.org/10.1109/MPCON69668.2026.11508248)**
+- **Status:** **✅ Published & Indexed in IEEE Xplore**
+- **Research Scope:** Establishes the mathematical guarantees of Single-Release Laplace Output Differential Privacy, analytical sensitivity bounds ($R_{\text{clip}} = 1.5$), and zero-leakage federated feature statistics aggregation on high-dimensional clinical physiological records.
+
+### 2. 🔬 Ongoing Research & Federated Learning Roadmap (Manuscript in Progress)
+- **Research Domain:** *Decentralized Multi-Client Federated Learning with Differential Privacy for Continuous Wearable IoT Health Monitoring*
+- **Current Academic Status:** **⏳ In Preparation / Empirical Expansion for Upcoming Submission**
+- **Note for Mentors & Reviewers:** While the foundational mathematical framework for **Differential Privacy** is officially published and peer-reviewed in IEEE MPCON, our **Decentralized Federated Learning multi-client framework** (cross-smartwatch FedAvg convergence under non-IID Dirichlet distributions, edge personalization loops, and 24-hour predictive early warnings with SHAP explainability) is actively undergoing extended clinical cohort validation and manuscript drafting for upcoming premier healthcare AI venue submission. All reproducible code and verified benchmark results are fully accessible in this repository.
 
 ---
 
