@@ -1,0 +1,20 @@
+{
+  "name": "healthshield-frontend",
+  "version": "1.0.0",
+  "description": "Humanized, empathetic frontend for privacy-preserving federated health monitoring with Explainable AI and 24h predictive early warnings.",
+  "main": "index.html",
+  "scripts": {
+    "start": "npx -y serve . -p 3000",
+    "dev": "npx -y serve . -p 3000"
+  },
+  "keywords": [
+    "healthcare",
+    "federated-learning",
+    "differential-privacy",
+    "telemetry",
+    "xai",
+    "humanized-ui"
+  ],
+  "author": "HealthShield Team",
+  "license": "MIT"
+}

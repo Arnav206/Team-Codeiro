@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HealthShield — Humanized Federated Health Companion</title>
+    <meta name="description" content="Empathetic, human-first health monitoring powered by on-device Federated Learning and Single-Release Differential Privacy.">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+    <!-- Sticky Navigation Bar -->
+    <header class="navbar" id="main-navbar">
+        <div class="nav-container">
+            <!-- Brand Logo -->
+            <div class="nav-brand">
+                <div class="brand-icon">
+                    <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+                    </svg>
+                </div>
+                <div class="brand-title">
+                    <h1>HealthShield <span class="brand-tag">Private AI</span></h1>
+                    <div class="brand-subtitle">Federated Health & Clinical Companion</div>
+                </div>
+            </div>
+
+            <!-- Nav Actions & User Switcher -->
+            <div class="nav-actions">
+                <!-- Backend Status Badge -->
+                <div class="status-badge local-edge" id="backend-status-badge">
+                    <span class="dot"></span>
+                    <span>Checking Engine...</span>
+                </div>
+
+                <!-- Patient Profile Selector -->
+                <div class="user-selector-wrapper">
+                    <div class="nav-avatar" id="nav-user-avatar">AK</div>
+                    <select id="user-select" class="user-dropdown" title="Switch Patient Profile">
+                        <option value="user1">Anurag Kushwaha</option>
+                        <option value="user2">Sunita Kushwaha</option>
+                        <option value="user3">Vikram Rao</option>
+                        <option value="user4">Dr. Priya Patel</option>
+                    </select>
+                </div>
+
+                <!-- Add Profile Button -->
+                <button class="btn-pill" id="add-profile-btn" title="Add New Patient Profile">
+                    <span>+ Add Profile</span>
+                </button>
+
+                <!-- Doctor Brief Modal Trigger -->
+                <button class="btn-pill btn-primary-pill" id="doctor-brief-btn" title="Export Doctor's Visit Brief">
+                    <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                        <path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/>
+                    </svg>
+                    <span>Doctor's Brief</span>
+                </button>
+
+                <!-- Theme Toggle Button -->
+                <button class="btn-icon" id="theme-toggle" title="Toggle Light/Dark Theme" aria-label="Toggle Theme">
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="app-main">
+
+        <!-- 1. Patient Greeting & Privacy Actions Banner -->
+        <section class="user-greeting-banner" id="greeting-banner">
+            <div class="greeting-text">
+                <h2>Here's how your body is recovering today 👋</h2>
+                <p id="user-persona-desc">Connecting continuous wearable telemetry with on-device privacy protection.</p>
+            </div>
+
+            <div class="greeting-actions">
+                <button class="btn-pill" id="sync-fit-btn" title="Sync 30 days telemetry from Google Fit">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
+                    </svg>
+                    <span>Sync Wearable Telemetry</span>
+                </button>
+
+                <button class="btn-pill" id="train-privacy-btn" title="Train on-device with Laplace Differential Privacy">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                    </svg>
+                    <span>On-Device Privacy Protect (DP)</span>
+                </button>
+
+                <button class="btn-pill" id="aggregate-fed-btn" title="Trigger Central FedAvg Communication Round">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"/>
+                        <path d="m4.93 4.93 4.24 4.24M14.83 9.17l4.24-4.24M14.83 14.83l4.24 4.24M9.17 14.83l-4.24 4.24"/>
+                    </svg>
+                    <span>Trigger Federated FedAvg</span>
+                </button>
+
+                <button class="btn-icon" id="privacy-details-btn" title="How Privacy Works">
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"/>
+                        <path d="M12 16v-4M12 8h.01"/>
+                    </svg>
+                </button>
+            </div>
+        </section>
+
+        <!-- 2. Patient Feeling & Symptom Check-in -->
+        <section class="feeling-checkin-card" id="feeling-checkin">
+            <div class="feeling-header">
+                <h3>💬 How are you feeling right now?</h3>
+                <span>Your self-reported perception helps our AI contextualize biometric spikes</span>
+            </div>
+            <div class="feeling-options">
+                <button class="feeling-btn" data-feeling="energized">
+                    <span class="emoji">😊</span>
+                    <span>Energized & Sharp</span>
+                </button>
+                <button class="feeling-btn" data-feeling="tired">
+                    <span class="emoji">😴</span>
+                    <span>Tired / Sleep Deficit</span>
+                </button>
+                <button class="feeling-btn" data-feeling="stressed">
+                    <span class="emoji">😣</span>
+                    <span>Tense or Stressed</span>
+                </button>
+                <button class="feeling-btn" data-feeling="dizzy">
+                    <span class="emoji">🤕</span>
+                    <span>Lightheaded / Dizzy</span>
+                </button>
+                <button class="feeling-btn" data-feeling="palpitations">
+                    <span class="emoji">💓</span>
+                    <span>Fast Heart / Flutter</span>
+                </button>
+            </div>
+            <div class="feeling-feedback-box" id="feeling-feedback-box"></div>
+        </section>
+
+        <!-- 3. Master Health Hero: Health Score & Human Narrative -->
+        <section class="health-hero-grid">
+            <!-- Empathetic Narrative Card -->
+            <div class="narrative-card">
+                <div>
+                    <div class="narrative-top">
+                        <span class="condition-badge normal" id="condition-badge">LOW RISK (NORMAL)</span>
+                        <div class="audio-narrator-bar">
+                            <button class="btn-audio" id="audio-narrator-btn" title="Listen to Daily Voice Summary">
+                                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+                                    <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
+                                </svg>
+                                <span class="narrator-text">Listen to Daily Brief</span>
+                                <div class="soundwaves-indicator" id="audio-soundwaves" style="display: none;">
+                                    <span></span><span></span><span></span><span></span>
+                                </div>
+                            </button>
+                        </div>
+                    </div>
+
+                    <h2 class="narrative-title" id="narrative-title">Your Body is Thriving and Well-Balanced</h2>
+                    <div class="narrative-headline" id="narrative-headline">Optimal Recovery & Energetic Equilibrium</div>
+                    <p class="narrative-body" id="narrative-body">
+                        Your resting heart rate is calm, sleep recovery was within clinical benchmarks, and daily cellular oxygenation is robust.
+                    </p>
+                </div>
+
+                <div>
+                    <div class="narrative-encourage" id="narrative-encourage">
+                        You're in a great space to enjoy your favorite physical activities and focus clearly on creative work.
+                    </div>
+                    <div class="clinical-alerts-wrapper" id="clinical-alerts-list"></div>
+                </div>
+            </div>
+
+            <!-- Health Score Ring Card -->
+            <div class="score-card">
+                <div class="score-dial-wrap">
+                    <svg class="score-svg" viewBox="0 0 100 100">
+                        <circle class="score-bg" cx="50" cy="50" r="44"/>
+                        <circle class="score-progress" id="score-circle-progress" cx="50" cy="50" r="44"/>
+                    </svg>
+                    <div class="score-center-text">
+                        <span class="score-number" id="health-score-val">88</span>
+                        <span class="score-max">/100</span>
+                    </div>
+                </div>
+                <div>
+                    <h3 class="score-caption">Overall Health Vitality</h3>
+                    <p class="score-sub">Multivariate Vital Risk Index</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- 4. Glanceable Biometric Vitals (6 Cards) -->
+        <section class="vitals-grid">
+            <!-- Resting Heart Rate -->
+            <div class="vital-card">
+                <div class="vital-card-header">
+                    <div class="vital-icon-box hr">
+                        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2">
+                            <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/>
+                        </svg>
+                    </div>
+                    <div class="heart-pulse-indicator" id="heart-pulse-indicator" title="Live Heart Rate Rhythm"></div>
+                </div>
+                <div class="vital-card-body">
+                    <h4>Resting Heart Rate</h4>
+                    <div class="vital-metric-row">
+                        <span class="vital-metric-val" id="val-hr">72</span>
+                        <span class="vital-metric-unit">BPM</span>
+                    </div>
+                    <span class="vital-metric-hint">Target: 60 - 100 BPM</span>
+                </div>
+            </div>
+
+            <!-- Blood Pressure -->
+            <div class="vital-card">
+                <div class="vital-card-header">
+                    <div class="vital-icon-box bp">
+                        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2">
+                            <path d="M3 12h3l3 8 4-16 3 8h5"/>
+                        </svg>
+                    </div>
+                    <span class="vital-tag">Vascular</span>
+                </div>
+                <div class="vital-card-body">
+                    <h4>Blood Pressure</h4>
+                    <div class="vital-metric-row">
+                        <span class="vital-metric-val" id="val-bp">118/78</span>
+                        <span class="vital-metric-unit">mmHg</span>
+                    </div>
+                    <span class="vital-metric-hint">Optimal: < 120/80 mmHg</span>
+                </div>
+            </div>
+
+            <!-- Blood Oxygen SpO2 -->
+            <div class="vital-card">
+                <div class="vital-card-header">
+                    <div class="vital-icon-box spo2">
+                        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2">
+                            <path d="M12 2a5 5 0 0 1 5 5v5a5 5 0 0 1-10 0V7a5 5 0 0 1 5-5z"/>
+                            <path d="M12 17v4M8 21h8"/>
+                        </svg>
+                    </div>
+                    <span class="vital-tag">Oxygen</span>
+                </div>
+                <div class="vital-card-body">
+                    <h4>Blood Oxygen (SpO2)</h4>
+                    <div class="vital-metric-row">
+                        <span class="vital-metric-val" id="val-spo2">98.5</span>
+                        <span class="vital-metric-unit">%</span>
+                    </div>
+                    <span class="vital-metric-hint">Clinical benchmark: >= 95%</span>
+                </div>
+            </div>
+
+            <!-- Sleep Recovery -->
+            <div class="vital-card">
+                <div class="vital-card-header">
+                    <div class="vital-icon-box sleep">
+                        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2">
+                            <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>
+                        </svg>
+                    </div>
+                    <span class="vital-tag">Circadian</span>
+                </div>
+                <div class="vital-card-body">
+                    <h4>Restorative Sleep</h4>
+                    <div class="vital-metric-row">
+                        <span class="vital-metric-val" id="val-sleep">7.4</span>
+                        <span class="vital-metric-unit">hrs</span>
+                    </div>
+                    <span class="vital-metric-hint">Target: 7.0 - 9.0 hrs</span>
+                </div>
+            </div>
+
+            <!-- Daily Steps -->
+            <div class="vital-card">
+                <div class="vital-card-header">
+                    <div class="vital-icon-box steps">
+                        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2">
+                            <path d="M13 4v6m0 4v6M8 8h10M6 16h12"/>
+                        </svg>
+                    </div>
+                    <span class="vital-tag">Active</span>
+                </div>
+                <div class="vital-card-body">
+                    <h4>Daily Steps</h4>
+                    <div class="vital-metric-row">
+                        <span class="vital-metric-val" id="val-steps">7,850</span>
+                        <span class="vital-metric-unit">steps</span>
+                    </div>
+                    <div class="vital-progress-bar">
+                        <div class="vital-progress-fill" id="step-progress-bar" style="width: 78%;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Active Calories -->
+            <div class="vital-card">
+                <div class="vital-card-header">
+                    <div class="vital-icon-box calories">
+                        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2">
+                            <path d="M12 2c1.1 0 2 .9 2 2 0 1.7-1 3.5-2 5-1-1.5-2-3.3-2-5 0-1.1.9-2 2-2z"/>
+                            <path d="M19 13c0 3.9-3.1 7-7 7s-7-3.1-7-7c0-2.8 1.6-5.3 4-6.5.3 1.5 1.5 2.7 3 2.7s2.7-1.2 3-2.7c2.4 1.2 4 3.7 4 6.5z"/>
+                        </svg>
+                    </div>
+                    <span class="vital-tag">Metabolic</span>
+                </div>
+                <div class="vital-card-body">
+                    <h4>Calories Burned</h4>
+                    <div class="vital-metric-row">
+                        <span class="vital-metric-val" id="val-calories">2,140</span>
+                        <span class="vital-metric-unit">kcal</span>
+                    </div>
+                    <span class="vital-metric-hint">Includes basal + active burn</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- 5. Daily Actionable Micro-Habits -->
+        <section class="habits-section">
+            <div class="section-title-wrap">
+                <div>
+                    <h3>🌱 Your Personalized Daily Micro-Habits</h3>
+                    <p>Three simple, doctor-approved actions tailored to your current biometric readings</p>
+                </div>
+            </div>
+            <div class="habits-grid" id="daily-habits-list"></div>
+        </section>
+
+        <!-- 6. 24-Hour Predictive Health Forecast & Early Warning -->
+        <section class="forecast-section">
+            <div class="section-title-wrap">
+                <div>
+                    <h3>🔮 24-Hour Predictive Early Warnings & Clinical Forecast</h3>
+                    <p>Clinical early warning model synthesizing physiological indicators, on-device XAI, and epidemiological risk guidelines</p>
+                </div>
+            </div>
+            <div class="forecast-grid" id="forecast-cards-container"></div>
+        </section>
+
+        <!-- 7. Explainable AI (XAI) & Charts Layout -->
+        <section class="xai-section-grid">
+            <!-- XAI Factor Attributions List -->
+            <div class="xai-factors-card">
+                <div class="section-title-wrap">
+                    <div>
+                        <h3>🧠 Explainable AI (XAI) Insights</h3>
+                        <p>Linear Shapley feature attributions relative to healthy clinical baseline</p>
+                    </div>
+                </div>
+                <div class="xai-columns">
+                    <div>
+                        <div class="xai-column-title protective">
+                            <span>🛡️ Protective Health Factors</span>
+                        </div>
+                        <div id="xai-protective-list"></div>
+                    </div>
+                    <div>
+                        <div class="xai-column-title risk">
+                            <span>⚠️ Factors Asking for Attention</span>
+                        </div>
+                        <div id="xai-risk-list"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Risk Probability Distribution Chart -->
+            <div class="chart-card">
+                <div class="section-title-wrap">
+                    <div>
+                        <h3>📊 Health Classification Probabilities</h3>
+                        <p>Confidence distribution across the 4 clinical event classes</p>
+                    </div>
+                </div>
+                <div class="chart-container-wrap">
+                    <canvas id="riskProbChart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <!-- 8. Interactive "What-If" Vital Sandbox (Simulator Toggle) -->
+        <section style="display: flex; justify-content: center;">
+            <button class="btn-pill btn-primary-pill" id="sim-toggle-btn" style="padding: 10px 24px; font-size: 0.95rem;">
+                Open "What-If" Vital Sandbox
+            </button>
+        </section>
+
+        <!-- Simulator Container -->
+        <section class="simulator-box" id="simulator-container">
+            <div class="sim-header">
+                <div>
+                    <h3>🎛️ Live Vital Simulation Sandbox</h3>
+                    <p style="color: var(--text-muted); font-size: 0.88rem;">Slide biometric parameters to observe instant risk adaptations, XAI updates, and clinical recommendations</p>
+                </div>
+                <button class="btn-pill" id="sim-reset-btn">Reset to Actual Vitals</button>
+            </div>
+
+            <div class="sim-sliders-grid">
+                <!-- HR Slider -->
+                <div class="sim-slider-card">
+                    <div class="sim-slider-label">
+                        <span>Resting Heart Rate</span>
+                        <strong class="sim-slider-val"><span id="sim-hr-val">72</span> BPM</strong>
+                    </div>
+                    <input type="range" class="sim-range-input" id="sim-hr" min="45" max="140" value="72">
+                </div>
+
+                <!-- Systolic BP Slider -->
+                <div class="sim-slider-card">
+                    <div class="sim-slider-label">
+                        <span>Systolic BP</span>
+                        <strong class="sim-slider-val"><span id="sim-bp-sys-val">120</span> mmHg</strong>
+                    </div>
+                    <input type="range" class="sim-range-input" id="sim-bp-sys" min="95" max="180" value="120">
+                </div>
+
+                <!-- Diastolic BP Slider -->
+                <div class="sim-slider-card">
+                    <div class="sim-slider-label">
+                        <span>Diastolic BP</span>
+                        <strong class="sim-slider-val"><span id="sim-bp-dia-val">80</span> mmHg</strong>
+                    </div>
+                    <input type="range" class="sim-range-input" id="sim-bp-dia" min="60" max="115" value="80">
+                </div>
+
+                <!-- SpO2 Slider -->
+                <div class="sim-slider-card">
+                    <div class="sim-slider-label">
+                        <span>Blood Oxygen (SpO2)</span>
+                        <strong class="sim-slider-val"><span id="sim-spo2-val">98.5</span>%</strong>
+                    </div>
+                    <input type="range" class="sim-range-input" id="sim-spo2" min="88.0" max="100.0" step="0.5" value="98.5">
+                </div>
+
+                <!-- Sleep Slider -->
+                <div class="sim-slider-card">
+                    <div class="sim-slider-label">
+                        <span>Sleep Duration</span>
+                        <strong class="sim-slider-val"><span id="sim-sleep-val">7.2</span> hrs</strong>
+                    </div>
+                    <input type="range" class="sim-range-input" id="sim-sleep" min="3.0" max="10.0" step="0.2" value="7.2">
+                </div>
+            </div>
+        </section>
+
+        <!-- 9. 14-Day Vitals Trend & Telemetry Table -->
+        <section class="timeline-section">
+            <div class="section-title-wrap">
+                <div>
+                    <h3>📈 14-Day Telemetry Trend & History</h3>
+                    <p>Continuous wearable tracking of heart rate rhythm, daily step volume, and physiological condition</p>
+                </div>
+            </div>
+
+            <!-- Line Chart -->
+            <div class="chart-container-wrap" style="height: 320px;">
+                <canvas id="timelineChart"></canvas>
+            </div>
+
+            <!-- History Table -->
+            <div class="table-responsive">
+                <table class="clinical-table">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Heart Rate</th>
+                            <th>Blood Pressure</th>
+                            <th>SpO2</th>
+                            <th>Sleep</th>
+                            <th>Steps</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="timeline-table-body"></tbody>
+                </table>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Modals -->
+
+    <!-- Doctor's Visit Brief Modal -->
+    <div class="modal-overlay" id="doctor-modal">
+        <div class="modal-dialog large">
+            <div class="modal-header">
+                <h3>🩺 Doctor's Clinical Consultation Brief</h3>
+                <button class="modal-close-btn" id="doctor-modal-close">&times;</button>
+            </div>
+            <div class="modal-body" id="doctor-report-content"></div>
+            <div class="modal-footer">
+                <button class="btn-pill" id="doctor-copy-btn">
+                    <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                    </svg>
+                    <span>Copy to Clipboard</span>
+                </button>
+                <button class="btn-pill btn-primary-pill" id="doctor-print-btn">
+                    <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="6 9 6 2 18 2 18 9"/>
+                        <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/>
+                        <rect x="6" y="14" width="12" height="8"/>
+                    </svg>
+                    <span>Print Clinical PDF</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Privacy Shield Details Modal -->
+    <div class="modal-overlay" id="privacy-modal">
+        <div class="modal-dialog">
+            <div class="modal-header">
+                <h3>🛡️ How Your Medical Privacy is Guaranteed</h3>
+                <button class="modal-close-btn" id="privacy-modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p style="font-size: 0.95rem; color: var(--text-body); line-height: 1.6;">
+                    Unlike traditional cloud healthcare apps where personal telemetry is uploaded to remote servers, HealthShield uses <strong>Decentralized Federated Learning with Output Differential Privacy</strong>.
+                </p>
+
+                <div class="privacy-flow-steps">
+                    <div class="privacy-step-item">
+                        <div class="step-num">1</div>
+                        <div class="step-content">
+                            <h4>Zero Raw Data Leaves Your Device</h4>
+                            <p>All sensor readings (heart rate, blood pressure, oxygen) stay locked strictly inside your local edge storage. No remote database ever stores your vitals.</p>
+                        </div>
+                    </div>
+
+                    <div class="privacy-step-item">
+                        <div class="step-num">2</div>
+                        <div class="step-content">
+                            <h4>Local Mathematical Learning</h4>
+                            <p>Your local machine trains a lightweight model on your personal data to extract mathematical gradients and weights without exposing individual records.</p>
+                        </div>
+                    </div>
+
+                    <div class="privacy-step-item">
+                        <div class="step-num">3</div>
+                        <div class="step-content">
+                            <h4>Differential Privacy Laplace Noise Mask (&epsilon;=1.0)</h4>
+                            <p>Before transmitting model weights, mathematical Laplace noise calibrated to sensitivity R_clip=1.5 is added. This makes it mathematically impossible to reverse-engineer your vitals.</p>
+                        </div>
+                    </div>
+
+                    <div class="privacy-step-item">
+                        <div class="step-num">4</div>
+                        <div class="step-content">
+                            <h4>Global Model Aggregation (FedAvg)</h4>
+                            <p>The central coordinator merges noised updates across all client nodes to build a collective health intelligence that benefits everyone.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-pill btn-primary-pill" onclick="document.getElementById('privacy-modal').classList.remove('open')">
+                    Understood & Protected
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Profile Modal -->
+    <div class="modal-overlay" id="add-profile-modal">
+        <div class="modal-dialog">
+            <div class="modal-header">
+                <h3>➕ Add New Patient Profile</h3>
+                <button class="modal-close-btn" id="add-profile-close">&times;</button>
+            </div>
+            <form id="add-profile-form">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="new-user-id">Patient Unique ID</label>
+                        <input type="text" class="form-input" id="new-user-id" placeholder="e.g. mom, dad, patient5" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="new-user-name">Full Patient Name</label>
+                        <input type="text" class="form-input" id="new-user-name" placeholder="e.g. Ramesh Sharma" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="new-user-email">Contact / Sync Email</label>
+                        <input type="email" class="form-input" id="new-user-email" placeholder="e.g. ramesh@family.health">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="new-user-archetype">Health Archetype Profile</label>
+                        <select class="form-select" id="new-user-archetype">
+                            <option value="balanced">Balanced Baseline (General Health)</option>
+                            <option value="athletic">Athletic / Runner (Low resting HR, high steps)</option>
+                            <option value="hypertensive">Hypertensive Tendency (Monitors elevated BP)</option>
+                            <option value="sleep_deficit">Shift Worker (Sleep deficit & irregular hours)</option>
+                            <option value="sedentary">Sedentary / Desk Worker (Lower step volume)</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-pill" onclick="document.getElementById('add-profile-modal').classList.remove('open')">Cancel</button>
+                    <button type="submit" class="btn-pill btn-primary-pill">Create Profile</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- App Toast Notification -->
+    <div class="app-toast" id="app-toast">
+        <div class="toast-content">
+            <strong id="toast-title">Notification</strong>
+            <p id="toast-desc">Message details</p>
+        </div>
+        <button class="toast-close-btn" id="toast-close">&times;</button>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/data.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/charts.js"></script>
+    <script src="js/speech.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>

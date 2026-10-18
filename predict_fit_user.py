@@ -229,13 +229,13 @@ def forecast_24h_future_diseases(vitals_dict: dict, report: dict, xai_data: dict
     steps = float(vitals_dict.get("steps_count", 5000.0))
     vri = float(report.get("vital_risk_index", 5.0))
 
-    # Disease 1: Sleep-Deprivation Induced Cognitive & Systemic Fatigue (स्लीप डेफिसिट और न्यूरो-थकान)
+    # Disease 1: Sleep-Deprivation Induced Cognitive & Systemic Fatigue
     sleep_deficit = max(0.0, 7.5 - sleep)
     sleep_prob = min(92, max(15, round(25 + sleep_deficit * 22 + (vri - 5.0) * 4)))
     sleep_level = "High Risk" if sleep_prob >= 65 else ("Moderate Risk" if sleep_prob >= 40 else "Low Risk")
     forecasts.append({
         "disease_name": "Sleep-Deprivation Induced Cognitive & Neuro-Fatigue",
-        "disease_hindi": "अति-थकान एवं मानसिक थकावट (Sleep Debt & Fatigue)",
+        "category": "Cognitive & Neurological Recovery",
         "timeframe": "Next 24 Hours",
         "risk_probability": sleep_prob,
         "risk_level": sleep_level,
@@ -248,13 +248,13 @@ def forecast_24h_future_diseases(vitals_dict: dict, report: dict, xai_data: dict
         "prevention_guidelines": "Target minimum 7.5 to 8.0 hours restorative sleep tonight. Avoid blue-light screens and caffeine after 4:00 PM."
     })
 
-    # Disease 2: Pre-Hypertensive Vascular Strain & Arterial Stiffness (प्री-हाइपरटेंशन एवं संवहनी दबाव)
+    # Disease 2: Pre-Hypertensive Vascular Strain & Arterial Stiffness
     pulse_pressure = bp_sys - bp_dia
     bp_prob = min(88, max(12, round(20 + max(0, bp_sys - 118) * 4 + max(0, pulse_pressure - 40) * 2)))
     bp_level = "High Risk" if bp_prob >= 60 else ("Moderate Risk" if bp_prob >= 35 else "Low Risk")
     forecasts.append({
         "disease_name": "Pre-Hypertension & Arterial Wall Strain",
-        "disease_hindi": "प्री-हाइपरटेंशन एवं धमनी तनाव (Borderline Hypertension Surge)",
+        "category": "Cardiovascular & Hemodynamic Strain",
         "timeframe": "Next 24–48 Hours",
         "risk_probability": bp_prob,
         "risk_level": bp_level,
@@ -267,13 +267,13 @@ def forecast_24h_future_diseases(vitals_dict: dict, report: dict, xai_data: dict
         "prevention_guidelines": "Reduce dietary sodium/salt intake today. Maintain 2.5L daily hydration and practice 15 minutes of calm diaphragmatic breathing."
     })
 
-    # Disease 3: Hypoxemic Respiratory Fatigue & Exercise Exhaustion (ऑक्सीजन डिप्रेशन एवं शारीरिक थकान)
+    # Disease 3: Hypoxemic Respiratory Fatigue & Exercise Exhaustion
     spo2_drop = max(0.0, 99.0 - spo2)
     resp_prob = min(85, max(10, round(15 + spo2_drop * 18)))
     resp_level = "High Risk" if resp_prob >= 55 else ("Moderate Risk" if resp_prob >= 30 else "Low Risk")
     forecasts.append({
         "disease_name": "Hypoxemic Exercise Exhaustion & Oxygen Dip",
-        "disease_hindi": "ऑक्सीजन डिप्रेशन एवं वर्कआउट थकान (Peripheral SpO2 Deficit)",
+        "category": "Respiratory & Cellular Oxygenation",
         "timeframe": "Next 24 Hours",
         "risk_probability": resp_prob,
         "risk_level": resp_level,
@@ -286,7 +286,7 @@ def forecast_24h_future_diseases(vitals_dict: dict, report: dict, xai_data: dict
         "prevention_guidelines": "Avoid heavy anaerobic gym lifting or high-intensity sprints today. Opt for gentle aerobic walking in fresh air."
     })
 
-    # Disease 4: Cardiac Autonomic Stress & Resting Arrhythmia Episode (हृदय तनाव एवं पल्पिटेशन जोखिम)
+    # Disease 4: Cardiac Autonomic Stress & Resting Arrhythmia Episode
     if hr > 80:
         cardio_prob = min(85, round(30 + (hr - 80) * 3))
         cardio_reason = f"Resting heart rate elevated at {hr:.1f} BPM reflects sympathetic dominance and increased myocardial workload."
@@ -296,7 +296,7 @@ def forecast_24h_future_diseases(vitals_dict: dict, report: dict, xai_data: dict
     cardio_level = "High Risk" if cardio_prob >= 60 else ("Moderate Risk" if cardio_prob >= 30 else "Low Risk (Protected)")
     forecasts.append({
         "disease_name": "Cardiovascular Autonomic Overload & Tachycardia",
-        "disease_hindi": "कार्डियोवास्कुलर तनाव एवं टैचीकार्डिया (Cardiac Autonomic Overload)",
+        "category": "Autonomic Nervous System & Rhythm",
         "timeframe": "Next 24 Hours",
         "risk_probability": cardio_prob,
         "risk_level": cardio_level,
